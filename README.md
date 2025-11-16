@@ -22,25 +22,21 @@ We will update more detailed result (including dataset, training, verification) 
 
 ## Dataset：CP2108💰
 
-
 <img src=".\assets\dataset_motivation_v2.png"/>
-
 
 ### Hightlight💴
 
 ### Settings♻️
 
-
 <img src=".\assets\dataset_characteristic.png"/>
 
-<img src=".\assets\dataset_attributes1.png"/>
-
+<img src=".\assets\dataset_characteristic_attributes.png"/>
 
 ---
 
 ## Method：SVPR-ReID💡
 
-<img src=".\assets\framework_v8.png"/>
+<img src=".\assets\SVPR-ReID.png"/>
 
 ---
 
