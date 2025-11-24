@@ -1,12 +1,11 @@
 # coding=utf-8
 '''
-@Time     : 2025/06/22 04:00:53
+@Time     : 2025/04/22 04:00:53
 @Author   : XHao
 @Email    : 2510383889@qq.com
 '''
 # here put the import lib
 # officical packages
-from collections import defaultdict
 import logging
 import os
 from termcolor import colored
@@ -21,7 +20,6 @@ from utils.meter import AverageMeter
 from utils.metrics_xhao import R1_mAP_eval
 from loss.supcontrast import SupConLoss
 from utils.comm import dict_to_table
-from utils.visualize import Visualizer_DiY
 
 
 def do_train_stage1(cfg,
@@ -212,7 +210,7 @@ def do_train(cfg,
         otherloss_meter.reset()
         acc_meter.reset()
         evaluator.reset()
-        
+
         model.train()
         for n_iter, (img, vid, target_cam, target_view, target_time, text) in enumerate(train_loader_stage2):
             optimizer.zero_grad()
@@ -224,16 +222,16 @@ def do_train(cfg,
             target_time = target_time.to(device)
             if text is not None:
                 text = [t.to(device) if t is not None else None for t in text]
-            
+
             with amp.autocast(enabled=True):
                 model_name = cfg.MODEL.ARCH_NAME
-                if model_name in ['TransReID', 'ViT']: 
+                if model_name in ['TransReID', 'ViT']:
                     score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
                     loss = loss_fn(score, feat, target, target_cam, add_type='other')
                     logits = score[0]
                     loss_add = torch.tensor(0.)
-                    
-                elif model_name in ['VDT','VDT_CVPR']:
+
+                elif model_name in ['VDT', 'VDT_CVPR']:
                     score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
                     loss = loss_fn(score[:-1], feat[:-1], target, target_cam)
                     logits = score[0]
@@ -241,24 +239,24 @@ def do_train(cfg,
                     loss_view = loss_fn.get_view_loss(score[-1], feat[-1], feat[0], target_view, view_lambda=0.1)
                     loss_add = torch.tensor(0.) if len(feat[:-1]) == 1 else loss_fn.get_pts_loss(feat[:-1])
                     loss = loss + loss_view * 1.0 + loss_add * 0.1
-                    
+
                 elif model_name in ['CLIP_View']:
                     score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
                     loss = loss_fn(score[:-1], feat[:-1], target, target_cam)
                     logits = score[0]
                     loss_add = loss_fn.get_view_loss(score[-1], feat[-1], feat[0], target_view)
-                    loss_add +=  torch.tensor(0.) if len(feat[:-1]) == 1 else loss_fn.get_pts_loss(feat[:-1])
+                    loss_add += torch.tensor(0.) if len(feat[:-1]) == 1 else loss_fn.get_pts_loss(feat[:-1])
                     loss = loss + loss_add * 1.0
-                    
+
                 elif model_name == 'SeCap':
                     score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
                     loss = loss_fn(score[:-1], feat[:-1], target, target_cam)
                     logits = score[0]
                     loss_add = loss_fn.get_view_loss(score[-1], feat[-1], feat[0], target_view, view_lambda=0.1)
                     loss = loss + loss_add
-                    
+
                 elif model_name == 'CLIP_view_attrText_cvpr_local':
-                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time,text=text)
+                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time, text=text)
                     logits = score[0]
                     loss = loss_fn(score[:-2], [*feat[:-3], feat[-2]], target, target_cam, add_type='other')
                     loss_attr = score[-2]
@@ -266,29 +264,29 @@ def do_train(cfg,
                     # loss_add = torch.tensor(0.) if len(feat[:-1]) == 1 else loss_fn.get_pts_loss(feat[:-1])
                     loss_add = torch.tensor(0.)  # attr loss
                     loss = loss + loss_view + loss_add * 0.05 + loss_attr * 0.05
-                
+
                 elif model_name in ['CLIP', 'CLIP_prompt', 'CLIP_GCA']:
                     # ~~~~~~~ CLIP-ReID ~~~~~~~~
                     score, feat, image_features = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
                     logits = image_features @  text_features.t()
                     loss = loss_fn(score, feat, target, target_cam, i2tscore=logits)
                     loss_add = torch.tensor(0.)
-                    
-                elif model_name in ['CLIP_baseline', 'CLIP_text', 'CLIP_text_ca','CLIP_Attr']:
-                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time,text=text)
+
+                elif model_name in ['CLIP_baseline', 'CLIP_text', 'CLIP_text_ca', 'CLIP_Attr']:
+                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time, text=text)
                     # logits = image_features @  text_features.t()
                     logits = score[0]
                     # logits = torch.stack(score, dim=1).mean(dim=1)
                     loss = loss_fn(score, feat, target, target_cam)
                     loss_add = torch.tensor(0.)
-                    
+
                 elif model_name in ['CLIP_CVPR']:
-                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time,text=text)
+                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time, text=text)
                     logits = score[0]
                     loss = loss_fn(score, feat, target, target_cam)
-                    
+
                     loss_add = loss_fn.get_pts_loss(feat[:-1])
-                    loss = loss + loss_add * 0.1 
+                    loss = loss + loss_add * 0.1
                 elif model_name == 'CLIP_inverseText_localPatchs_CVPR':
                     score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time, text=text)
                     # logits = image_features @  text_features.t()
@@ -297,16 +295,16 @@ def do_train(cfg,
                     loss = loss_fn(score, feat, target, target_cam, add_type='other')
                     loss_add = loss_fn.get_pts_loss(feat[:-1]) * 0.1
                     loss += loss_add
-                    
+
                 elif model_name == 'CLIP_text_prompt_localPatchs_CVPR':
                     score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time, text=text)
                     logits = score[0]
                     loss = loss_fn(score, feat, target, target_cam, add_type='other')
                     # loss_add = loss_fn.get_pts_loss(feat[:-1])
                     # loss += loss_add * 0.1
-                    loss_add=torch.tensor(0.)
+                    loss_add = torch.tensor(0.)
                     # loss = loss
-                    
+
                 elif model_name == 'CLIP_GLView':
                     score, feat, image_features, loss_add = model(
                         x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time,
@@ -315,7 +313,7 @@ def do_train(cfg,
                     logits = image_features @  text_features.t()
                     loss = loss_fn(score, feat, target, target_cam, i2tscore=logits)
                     loss += loss_add
-                    
+
                 elif model_name == 'CLIP_PTS':
                     score, feat, image_features = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
                     logits = image_features @  text_features.t()
@@ -374,7 +372,7 @@ def do_train(cfg,
                                     acc_meter.avg, scheduler.get_lr()[0]))
 
         scheduler.step()
-        
+
         end_time = time.time()
         time_per_batch = (end_time - start_time) / (n_iter + 1)
         if cfg.MODEL.DIST_TRAIN:
@@ -427,7 +425,7 @@ def do_train(cfg,
                             text = [t.to(device) if t is not None else None for t in text]
                         feat = model(img, cam_label=camids, view_label=target_view, time_label=target_time, text=text)
                         # evaluator.update((feat, vid, camid, timeids))
-                        evaluator.update((feat, vid, camid, timeids, imgpath, img))
+                        evaluator.update((feat, vid, camid, viewids, timeids, imgpath, img))
                 # cmc, mAP, mINP, _, _, _, _, _ = evaluator.compute()
                 time_mode = cfg.TEST.TIME_MODE
                 cmc, mAP, mINP, _, _, _, _, _ = evaluator.new_compute(time_mode=time_mode, visualizer=None)
@@ -467,7 +465,7 @@ def do_inference(cfg,
     evaluator.reset()
 
     use_grad = False
-    visualizer = Visualizer_DiY(cfg, model, dataset_name=dataset_name, actmap_layers=['BACKBONE.visual.transformer.resblocks.11'])
+
     if device:
         if torch.cuda.device_count() > 1:
             print('Using {} GPUs for inference'.format(torch.cuda.device_count()))

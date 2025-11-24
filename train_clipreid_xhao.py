@@ -14,7 +14,7 @@ from processor.processor_clipreid_xhao import do_train_stage1, do_train, do_infe
 from solver.make_optimizer_prompt import make_optimizer_1stage, make_optimizer_2stage, make_optimizer
 from solver.scheduler_factory import create_scheduler
 from solver.lr_scheduler import WarmupMultiStepLR
-from loss.make_loss import make_loss, ReIDLoss
+from loss.make_loss import ReIDLoss
 
 
 def set_seed(seed):
@@ -31,11 +31,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="ReID Baseline Training")
     parser.add_argument(
-        # "--config_file", default="configs/CP2000/vit_v40.yml", help="path to config file", type=str
-        # "--config_file", default="configs/CP2000/vit_transreid_v100.yml", help="path to config file", type=str
-        "--config_file", default="configs/AGReIDv1/vit_clipreid_ours_view_attrText_cvpr_local.yml", help="path to config file", type=str
-        # "--config_file", default="configs/AGReIDv1/vit_clipreid_ours.yml", help="path to config file", type=str
-        # "--config_file", default="configs/AGReIDv2/vit_clipreid_baseline.yml", help="path to config file", type=str
+        "--config_file", default="configs/CP2000/vit_clipreid_baseline.yml", help="path to config file", type=str
+        # "--config_file", default="configs/CP2000/vit_clipreid_svpr.yml", help="path to config file", type=str
     )
 
     parser.add_argument("opts", help="Modify config options using the command-line", default=None,

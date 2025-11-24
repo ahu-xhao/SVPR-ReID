@@ -1,11 +1,16 @@
+# coding=utf-8
+'''
+@Time     : 2025/06/24 18:33:21
+@Author   : XHao
+@Email    : 2510383889@qq.com
+'''
+# here put the import lib
+
+
 import torch
 import numpy as np
-import os
-from utils import visualize
 from utils.reranking import re_ranking
 import logging
-from utils.visualize import Visualizer_DiY
-from collections import defaultdict
 
 
 logger = logging.getLogger('CLIP-ReID.EVAL')
@@ -328,23 +333,6 @@ class R1_mAP_eval():
 
         if visualizer is not None:
             logger.info('=> Visualizing results')
-            # visualize
-            datasets = []
-            for i, pid in enumerate(self.pids):
-                # , self.camids, self.timeids, self.img_paths
-                data = {}
-                data['targets'] = pid
-                data['camids'] = self.camids[i]
-                data['timeids'] = self.timeids[i]
-                # data['viewids'] = self.viewids[i]
-                data['img_paths'] = self.img_paths[i]
-                data['images'] = self.images[i]
-                datasets.append(data)
-            visualizer.reset(datasets)
-            visualizer.get_model_output_v2(all_AP, query_keep_indices, gallery_keep_indices, distmat, self.pids, self.camids)
-            visualizer.plot_img = False
-            model_name = self.cfg.MODEL.ARCH_NAME if self.cfg is not None else 'ViT'
-            visualizer.vis_rank_list(f'rank_list/{model_name}', max_rank=10)
 
         return cmc, mAP, mINP, distmat, self.pids, self.camids, qf, gf
 
