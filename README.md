@@ -58,10 +58,10 @@ sh setup.sh
 
 #### step2 Datasets:
 
-- **CP2108:**
-- **AGReID:**
-- **AGReIDv2: **
-- **CARGO:** 
+- **CP2108:** Google Drive
+- **CARGO:**   [Google Drive](https://drive.google.com/file/d/1yDjyH0VtW7efxP3vgQjIqTx2oafCB67t/view?usp=drive_link)
+- **AGReID.v2: **[Google Drive](https://drive.google.com/drive/folders/16r7G_CuUqfWG6_UCT7goIGRMqJird6vK?usp=share_link)
+- **AGReID: ** [Google Drive](https://drive.google.com/file/d/1hzieEPlXfjkN3V3XWqI5rAwpF_sCF1K9/view?usp=sharing)
 
 Download the datasets  and then unzip them to `your_dataset_dir`.
 
@@ -103,11 +103,18 @@ CUDA_VISIBLE_DEVICES=3 python test_clipreid_xhao.py --config_file configs/CP2108
 
 ### Acknowledgement
 
-Codebase from [TransReID](https://github.com/damo-cv/TransReID), [CLIP](https://github.com/openai/CLIP), and [CoOp](https://github.com/KaiyangZhou/CoOp).
+Codebase from [TransReID](https://github.com/damo-cv/TransReID), [CLIP](https://github.com/openai/CLIP), and [CoOp](https://github.com/KaiyangZhou/CoOp)
 
 
 
 ### Citation
 
-
+```
+@inproceedings{Zheng2026SVPR-ReID,
+  title={Semantic-Driven Visual Progressive Refinement for Aerial-Ground Person ReID: A Challenging Large-Scale Benchmark},
+  author={Aihua zheng, Hao Xie, Xixi Wan, Zi Wang, Shihao Li, Jin Tang, and Bin Luo},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  year={2026}
+}
+```
 
