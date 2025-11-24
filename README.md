@@ -46,10 +46,38 @@ We will update more detailed result (including dataset, training, verification) 
 
 ### Setup
 
-#### step1:
+You need to “cd” the project dir ！！！
 
-#### step2:
+#### step1 Environments:
 
-### step3:
+run the basic python environments as follows （following by CLIP-ReID）：
+
+```c
+sh setup.sh
+```
+
+#### step2 Datasets:
+
+
 
 ### Training & Testing🔧
+
+For example, if you want to run CNN-based CLIP-ReID-baseline for the Market-1501, you need to modify the bottom of configs/person/cnn_base.yml to
+
+```
+DATASETS:
+   NAMES: ('')
+   ROOT_DIR: ('your_dataset_dir')
+OUTPUT_DIR: 'your_output_dir'
+```
+
+Then run：
+
+```python
+CUDA_VISIBLE_DEVICES=3 python train_clipreid_xhao.py --config_file configs/CP2000/vit_clipreid_baseline_v100.yml
+```
+
+
+
+### Citation
+
