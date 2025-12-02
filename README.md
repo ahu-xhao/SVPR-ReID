@@ -18,8 +18,6 @@ We will update more detailed result (including dataset, training, verification) 
 
 20251130 - Our paper is available on  arxiv !
 
-
-
 ---
 
 ## Dataset：CP2108💰
@@ -46,7 +44,7 @@ We will update more detailed result (including dataset, training, verification) 
 
 ### Setup
 
-You need to “cd” the project dir ！！！
+**You need to “cd” the project dir ！！！**
 
 #### step1 Environments:
 
@@ -60,8 +58,8 @@ sh setup.sh
 
 - **CP2108:** Google Drive
 - **CARGO:**   [Google Drive](https://drive.google.com/file/d/1yDjyH0VtW7efxP3vgQjIqTx2oafCB67t/view?usp=drive_link)
-- **AGReID.v2: **[Google Drive](https://drive.google.com/drive/folders/16r7G_CuUqfWG6_UCT7goIGRMqJird6vK?usp=share_link)
-- **AGReID: ** [Google Drive](https://drive.google.com/file/d/1hzieEPlXfjkN3V3XWqI5rAwpF_sCF1K9/view?usp=sharing)
+- **AGReID.v2:**  [Google Drive](https://drive.google.com/drive/folders/16r7G_CuUqfWG6_UCT7goIGRMqJird6vK?usp=share_link)
+- **AGReID:**  [Google Drive](https://drive.google.com/file/d/1hzieEPlXfjkN3V3XWqI5rAwpF_sCF1K9/view?usp=sharing)
 
 Download the datasets  and then unzip them to `your_dataset_dir`.
 
@@ -89,8 +87,6 @@ Then run：
 CUDA_VISIBLE_DEVICES=3 python train_clipreid_xhao.py --config_file configs/CP2108/vit_clipreid_baseline_v100.yml
 ```
 
-
-
 ### Evaluation🔧
 
 For example, if you want to test ViT-based CLIP-ReID Baseline for CP2108 :
@@ -99,13 +95,9 @@ For example, if you want to test ViT-based CLIP-ReID Baseline for CP2108 :
 CUDA_VISIBLE_DEVICES=3 python test_clipreid_xhao.py --config_file configs/CP2108/vit_clipreid_baseline_v100.yml
 ```
 
-
-
 ### Acknowledgement
 
 Codebase from [TransReID](https://github.com/damo-cv/TransReID), [CLIP](https://github.com/openai/CLIP), and [CoOp](https://github.com/KaiyangZhou/CoOp)
-
-
 
 ### Citation
 
@@ -117,4 +109,3 @@ Codebase from [TransReID](https://github.com/damo-cv/TransReID), [CLIP](https://
   year={2026}
 }
 ```
-
