@@ -1,6 +1,6 @@
 # SVPR-ReID🌱
 
-SVPR-ReID: Semantic-Driven Visual Progressive Refinement for Aerial-Ground Person ReID: A Challenging Large-Scale Benchmark (AAAI 2026 Poster)
+SVPR-ReID: Semantic-Driven Visual Progressive Refinement for Aerial-Ground Person ReID: A Challenging Large-Scale Benchmark (AAAI 2026 Poster)   [PDF] (./assets/Camera_Ready_AAAI26_SVPR_ReID.pdf)
 
 ### Updates👨‍💻
 
