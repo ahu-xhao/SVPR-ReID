@@ -16,12 +16,6 @@ from pathlib import Path
 import torch
 import copy
 
-# no need sota or heavy easy or ours heavy_hard
-sota_easy_ours_hard = {1536, 1538, 1541, 2054, 2055, 2057, 2058, 11, 1549, 1550, 13, 1552, 2062, 1551, 1555, 17, 2064, 1559, 24, 1561, 1563, 1564, 29, 1566, 1567, 31, 33, 1572, 1573, 2084, 1575, 1576, 2086, 1578, 39, 1577, 1580, 2094, 47, 1585, 49, 2045, 1588, 2101, 1589, 2103, 1591, 1593, 1592, 2107, 1612, 1614, 1619, 1622, 1625, 1631, 1633, 1637, 1641, 1149, 1156, 1162, 1163, 1164, 1682, 1702, 1197, 1198, 1709, 1201, 1714, 1203, 1206, 1211, 1724, 1730, 1732, 1226, 1229, 1232, 1748, 1246, 1247, 1250, 1764, 1253, 1766, 1768, 1257, 1261, 1262, 1774, 1269, 1781, 1271, 1270, 1273, 1274, 1276, 1279, 1281, 1287, 1800, 1289, 1291, 1295, 1298, 1299, 1300, 276, 1302, 1306, 282, 283, 1320,
-                       1323, 1326, 1327, 1841, 1341, 1348, 1860, 1865, 1356, 1357, 1360, 1362, 1369, 1372, 1374, 1376, 1378, 1379, 1380, 1389, 1390, 1906, 1395, 1396, 1909, 1913, 1914, 1401, 1404, 1402, 1411, 1415, 1416, 1417, 1418, 1420, 1422, 1423, 1424, 1425, 1935, 1428, 1430, 1432, 1433, 1945, 1434, 1438, 1439, 1444, 1957, 1958, 1449, 1450, 1961, 1452, 1453, 1454, 1455, 1451, 1969, 1457, 1458, 1968, 1971, 1974, 1972, 1464, 1463, 1979, 1981, 1470, 1471, 1472, 1985, 1986, 451, 1478, 1990, 1480, 1481, 1994, 1483, 1998, 2001, 2005, 1493, 1495, 1498, 1499, 2010, 2015, 1505, 2018, 1507, 2021, 998, 2023, 1510, 1514, 1515, 1518, 1519, 1520, 2031, 2034, 2035, 1521, 2037, 1525, 1528, 2041, 2042, 1533, 1535}
-
-# sota_easy_ours_hard = {}
-
 
 class CP2108(BaseImageDataset):
     """
@@ -180,7 +174,7 @@ class CP2108(BaseImageDataset):
         return pid_factory
 
     def repair_factory(self, pid_factory):
-        # 容错
+        # fault tolerance
         for pid in pid_factory:
             if 0 not in pid_factory[pid]:
                 pid_factory[pid][0] = copy.deepcopy(pid_factory[pid][1])
@@ -291,7 +285,7 @@ class CP2108_ALL(CP2108):
         gallery = self._process_dir(gallery_dir, train=False, mode='mix')
         gallery_pids = {item[1] for item in gallery}
         query = self._process_dir(query_dir, train=False, mode='mix', gallery_pids=gallery_pids)
-        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
+
         return train, query, gallery
 
 
@@ -304,7 +298,6 @@ class CP2108_GA(CP2108):
         gallery_pids = {item[1] for item in gallery}
 
         query = self._process_dir(query_dir, train=False, mode='ground', gallery_pids=gallery_pids)
-        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
 
         return train, query, gallery
 
@@ -333,7 +326,7 @@ class CP2108_AA(CP2108):
         gallery_pids = {item[1] for item in gallery}
 
         query = self._process_dir(query_dir, train=False, mode='aerial', gallery_pids=gallery_pids)
-        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
+
         return train, query, gallery
 
 
@@ -347,7 +340,7 @@ class CP2108_GG(CP2108):
         gallery_pids = {item[1] for item in gallery}
 
         query = self._process_dir(query_dir, train=False, mode='ground', gallery_pids=gallery_pids)
-        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
+
         return train, query, gallery
 
 
@@ -360,7 +353,7 @@ class CP2108_AGAG(CP2108):
         train = self._process_dir(train_dir, train=True, mode='mix')
         query = self._process_dir(query_dir, train=False, mode='aerial-ground')
         gallery = self._process_dir(gallery_dir, train=False, mode='aerial-ground')
-        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
+
         return train, query, gallery
 
 
@@ -372,7 +365,7 @@ class CP2108_AAGG(CP2108):
         gallery = self._process_dir(gallery_dir, train=False, mode='mix')
         gallery_pids = {item[1] for item in gallery}
         query = self._process_dir(query_dir, train=False, mode='mix', gallery_pids=gallery_pids)
-        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
+
         return train, query, gallery
 
 
