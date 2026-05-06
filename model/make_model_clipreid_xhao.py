@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from timm.layers import trunc_normal_
 from .attention import Attention, CrossAttention, MLP, AttentionScoreMask, CrossAttentionBlock
-from .moe import MOE_simple, Router as AttentionRouter
+from .moe import MOE_simple
 from loss.softmax_loss import CrossEntropyLabelSmooth
 import logging
 
