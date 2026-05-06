@@ -2,7 +2,7 @@
 '''
 @Time     : 2024/09/22 13:17:51
 @Author   : XHao
-@Email    : 2510383889@qq.com
+@Email    :  xhao2510@foxmail.com
 '''
 # here put the import lib
 

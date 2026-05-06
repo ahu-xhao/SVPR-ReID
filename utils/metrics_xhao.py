@@ -2,7 +2,6 @@ import torch
 import numpy as np
 from utils.reranking import re_ranking
 import logging
-from utils.visualize import Visualizer_DiY
 from collections import defaultdict
 
 

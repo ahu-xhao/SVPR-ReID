@@ -2,7 +2,7 @@
 '''
 @Time     : 2024/04/06 22:48:09
 @Author   : XHao
-@Email    : 2510383889@qq.com
+@Email    : xhao2510@foxmail.com
 '''
 import math
 from functools import partial
@@ -132,6 +132,7 @@ class Mlp(nn.Module):
         x = self.drop(x)
         return x
 
+
 class Attention(nn.Module):
     def __init__(self, dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0.):
         super().__init__()
@@ -154,7 +155,7 @@ class Attention(nn.Module):
         attn = (q @ k.transpose(-2, -1)) * self.scale
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
-        
+
         if torch.isnan(attn).any() or torch.isinf(attn).any():
             print('attn is nan in Attention forward')
 
@@ -162,7 +163,7 @@ class Attention(nn.Module):
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
-    
+
 # class Attention(nn.Module):
 #     def __init__(self, dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0.):
 #         super().__init__()
@@ -187,7 +188,7 @@ class Attention(nn.Module):
 #         # attn = attn.softmax(dim=-1)
 #         # print("attn min:", attn.min().item(), "attn max:", attn.max().item())
 #         # torch.nn.utils.clip_grad_norm_(self.parameters(), attn.max(dim=-1, keepdim=True)[0])
-        
+
 #         # attn = attn - attn.max(dim=-1, keepdim=True)[0]
 #         # attn = attn.contiguous().softmax(dim=-1)
 
@@ -459,7 +460,7 @@ class ViT_ViewDecouple(nn.Module):
             if self.inner_sub:
                 x[:, 0] = x[:, 0] - x[:, 1]
             self.block_features[idx + start_at_block] = x if save_feat_cash else None
-        
+
         if not self.local_feature:
             x = self.norm(x)
         self.block_features[idx + start_at_block] = x if save_feat_cash else None

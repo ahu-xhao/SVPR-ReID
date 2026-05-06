@@ -2,7 +2,7 @@
 '''
 @Time     : 2024/04/09 12:42:48
 @Author   : XHao
-@Email    : 2510383889@qq.com
+@Email    :  xhao2510@foxmail.com
 '''
 # here put the import lib
 from typing import Mapping
