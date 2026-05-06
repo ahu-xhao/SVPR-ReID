@@ -2,19 +2,16 @@
 '''
 @Time     : 2025/06/06 18:07:01
 @Author   : XHao
-@Email    : 2510383889@qq.com
+@Email    : xhao2510@foxmail.com
 '''
 # here put the import lib
 import logging
 logger = logging.getLogger(__name__)
 
-from .make_model_clipreid_xhao import CLIP_ReID, CLIP_prompt, CLIP_PTS, CLIP_GCA, CLIP_AUG
-from .make_model_clipreid_ours_v1 import CLIP_baseline, CLIP_inverseText_localPatchs_CVPR
-# from .make_model_clipreid_ours_v2 import CLIP_text_prompt_localPatchs_CVPR,CLIP_text
-from .make_model_clipreid_ours_v2 import *
 from .make_model_vit import ViT, TransReID, VDT
-from .make_model_vit_ours import TransReID_CVPR, ViT_CVPR, VDT_CVPR
 from .make_model_vit_secap import SeCap
+from .make_model_clipreid import CLIP_ReID, CLIP_baseline
+from .make_model_clipreid_xhao import CLIP_SVPR_ReID
 
 
 def make_model(cfg, num_class, camera_num, view_num, **kwargs):

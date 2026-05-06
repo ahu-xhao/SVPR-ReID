@@ -2,7 +2,7 @@
 '''
 @Time     : 2023/12/26 09:39:54
 @Author   : XHao
-@Email    : 2510383889@qq.com
+@Email    : xhao2510@foxmail.com
 '''
 # here put the import lib
 import glob
@@ -39,6 +39,7 @@ ATTR_MAP = {
     'bag': ['normal', 'backpack', 'hand', 'rolling', 'umbrella', 'sportif', 'market', 'nothing', 'unknown']
 }
 
+
 class AGReIDv2(BaseImageDataset):
     """
     Dataset statistics:
@@ -63,7 +64,7 @@ class AGReIDv2(BaseImageDataset):
             self.use_attr = self.cfg.MODEL.USE_ATTR
             self.text_prompt = 'X ' * self.cfg.MODEL.TEXT_PROMPT if self.cfg.MODEL.TEXT_PROMPT > 0 else ""
             self.text_format = self.cfg.MODEL.TEXT_FORMAT
-            
+
         self.dataset_dir = osp.join(root, self.dataset_dir)
         self.train_dir = osp.join(self.dataset_dir, 'train_all')
         self.query_dir = osp.join(self.dataset_dir, 'query')
@@ -93,7 +94,7 @@ class AGReIDv2(BaseImageDataset):
             self.attribute_names = []
             self.attribute_num_classes = {}
             self.attributes = {}
-        
+
         self.train, self.query, self.gallery = self.make_dataset(train_dir=self.train_dir,
                                                                  query_dir=self.query_dir,
                                                                  gallery_dir=self.gallery_dir)
@@ -225,7 +226,7 @@ class AGReIDv2(BaseImageDataset):
 
             use_attr = self.use_attr and train
             attr_anno = self.attributes[str(pid)] if use_attr else None
-            
+
             # if self.use_text:
             #     platform_name = {0: "UAV", 1: "CCTV"}[viewid]
             #     text_anno = f"An image of a {self.text_prompt} in the {platform_name} platform, capturing natural colors and fine details: {self.get_text_per_img(self.texts, pid, viewid, timeid)}"
@@ -236,7 +237,6 @@ class AGReIDv2(BaseImageDataset):
         self.logger.info(f'{dir_path}: {views}')
         return dataset
 
-    
     def generate_attribute_dict(self, dir_path: str, dataset: str):
 
         mat_attribute_train = mat4py.loadmat(dir_path)[dataset]["train"]
@@ -252,14 +252,13 @@ class AGReIDv2(BaseImageDataset):
 
         h, w = mat_attribute.shape
         dict_attribute = dict()
-        
+
         for i in range(h):
             row = mat_attribute.iloc[i:i + 1, :].values.reshape(-1)
             dict_attribute[str(int(mat_attribute.index[i]))] = torch.tensor(row[0:].astype(int)) * 2 - 3
 
         return dict_attribute, key_attribute
-    
-    
+
     def get_text_per_img(self, text=None, pid=None, viewid=None, time_id=None):
         return f"the person has attributes labled with {time_id}"
 

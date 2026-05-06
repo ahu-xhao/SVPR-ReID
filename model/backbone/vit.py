@@ -2,7 +2,7 @@
 '''
 @Time     : 2024/04/06 22:48:09
 @Author   : XHao
-@Email    : 2510383889@qq.com
+@Email    : xhao2510@foxmail.com
 '''
 import math
 from functools import partial

@@ -1,21 +1,23 @@
 
-from email.mime import text
+# encoding: utf-8
 import torch
 import torchvision.transforms as T
 from torch.utils.data import DataLoader
 
 from .bases import ImageDataset_aug as ImageDataset
 from timm.data.random_erasing import RandomErasing
-from .sampler import RandomIdentitySampler, RandomIdentitySampler_AG, ViewBalancedSampler_xhao
+from .sampler import RandomIdentitySampler, NaiveIdentitySampler
+from .sampler_ddp import RandomIdentitySampler_DDP
+
 from .dukemtmcreid import DukeMTMCreID
 from .market1501 import Market1501
 from .msmt17 import MSMT17
-from .sampler_ddp import RandomIdentitySampler_DDP
 import torch.distributed as dist
 from .occ_duke import OCC_DukeMTMCreID
 from .vehicleid import VehicleID
 from .veri import VeRi
-from .cp2000 import CP2000_ALL, CP2000_AA, CP2000_AG, CP2000_GA, CP2000_GG, CP2000_AGAG, CP2000_AAGG
+# AGPReID Datasets
+from .cp2108 import CP2108_ALL, CP2108_AA, CP2108_AG, CP2108_GA, CP2108_GG, CP2108_AGAG, CP2108_AAGG
 from .agreid import AGReID, AGReID_GA, AGReID_AG
 from .agreidv2 import AGReIDv2, AGReIDv2_CA, AGReIDv2_AC, AGReIDv2_AW, AGReIDv2_WA
 from .cargo import CARGO, CARGO_GA, CARGO_AG, CARGO_AA, CARGO_GG, CARGO_AGAG
@@ -31,13 +33,13 @@ __factory = {
     'veri': VeRi,
     'VehicleID': VehicleID,
 
-    'CP2000_ALL': CP2000_ALL,
-    'CP2000_GA': CP2000_GA,
-    'CP2000_AG': CP2000_AG,
-    'CP2000_AA': CP2000_AA,
-    'CP2000_GG': CP2000_GG,
-    'CP2000_AGAG': CP2000_AGAG,
-    'CP2000_AAGG': CP2000_AAGG,
+    'CP2108_ALL': CP2108_ALL,
+    'CP2108_GA': CP2108_GA,
+    'CP2108_AG': CP2108_AG,
+    'CP2108_AA': CP2108_AA,
+    'CP2108_GG': CP2108_GG,
+    'CP2108_AGAG': CP2108_AGAG,
+    'CP2108_AAGG': CP2108_AAGG,
 
     'AGReID': AGReID,
     'AGReID_GA': AGReID_GA,
@@ -59,16 +61,12 @@ __factory = {
 
 __sampler_list = {
     'RandomIdentitySampler': RandomIdentitySampler,
-    'RandomIdentitySampler_AG': RandomIdentitySampler_AG,
-    'ViewBalancedSampler_xhao': ViewBalancedSampler_xhao,
+    'NaiveIdentitySampler': NaiveIdentitySampler,
     'RandomIdentitySampler_DDP': RandomIdentitySampler_DDP,
 }
 
 
 def train_collate_fn(batch):
-    """
-    # collate_fn这个函数的输入就是一个list，list的长度是一个batch size，list中的每个元素都是__getitem__得到的结果
-    """
     imgs, pids, camids, viewids, timeids, _, text_tokens, attr = zip(*batch)
     pids = torch.tensor(pids, dtype=torch.int64)
     viewids = torch.tensor(viewids, dtype=torch.int64)
@@ -79,12 +77,13 @@ def train_collate_fn(batch):
         imgs = [torch.stack(img_batch, dim=0) for img_batch in imgs]
     text = torch.stack(text_tokens, dim=0) if text_tokens[0] is not None else None
     attr = torch.stack(attr, dim=0) if attr[0] is not None else None
-    
+
     return torch.stack(imgs, dim=0), pids, camids, viewids, timeids, [text, attr]
 
 
 def val_collate_fn(batch):
     imgs, pids, camids, viewids, timeids, img_paths, text_tokens, attr = zip(*batch)
+    pids = torch.tensor(pids, dtype=torch.int64)
     viewids = torch.tensor(viewids, dtype=torch.int64)
     timeids = torch.tensor(timeids, dtype=torch.int64)
     camids_batch = torch.tensor(camids, dtype=torch.int64)
@@ -122,7 +121,7 @@ def make_dataloader(cfg, dataset_name=None, train=True):
     num_classes = dataset.num_train_pids
     cam_num = dataset.num_train_cams
     view_num = dataset.num_train_vids
-    dataset_dir = dataset.dataset_dir
+    # dataset_dir = dataset.dataset_dir
     if 'triplet' in cfg.DATALOADER.SAMPLER:
         if cfg.MODEL.DIST_TRAIN:
             logger.info('DIST_TRAIN START')

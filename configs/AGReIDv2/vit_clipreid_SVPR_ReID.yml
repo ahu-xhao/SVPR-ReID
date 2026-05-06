@@ -1,0 +1,70 @@
+MODEL:
+  DEVICE_ID: ('1')
+  PRETRAIN_PATH: '../pretrain_model/CLIP-ViT-B-16.pt'
+  NAME: 'ViT-B-16'
+  ARCH_NAME: 'CLIP_SVPR_ReID'
+  STRIDE_SIZE: [16, 16]
+  ID_LOSS_WEIGHT : 0.25
+  # xhao
+  USE_TEXT: True
+  TEXT_TYPE: 'attribute'                       # Type of text input (options: 'captions', 'attribute')
+  TEXT_FORMAT: 'depart'                        # Format of text input (options: 'hybird', 'depart')
+  FREEZE_TEXT: True
+  TEXT_PROMPT: 4                               # Num of text prompt ("X ")
+  TEXT_LEN: 100                                # context length of text for clip tokenlizer
+  HEAD_UNIFORM: False                           # Whether to use a uniform contact features loss supervision
+  USE_ATTR: True
+  VIEW_PROMPT: 4
+
+INPUT:
+  SIZE_TRAIN: [256, 128]
+  SIZE_TEST: [256, 128]
+  PROB: 0.5 # random horizontal flip
+  RE_PROB: 0.5 # random erasing
+  PADDING: 10
+  PIXEL_MEAN: [0.5, 0.5, 0.5]
+  PIXEL_STD: [0.5, 0.5, 0.5]
+
+DATALOADER:
+  SAMPLER: 'softmax_triplet'
+  SAMPLER_NAME: 'RandomIdentitySampler'
+  AUG: False
+  NUM_INSTANCE: 4
+  NUM_WORKERS: 8
+
+SOLVER:
+  STAGE1:
+    TRAIN: False
+    # PRETRAIN_PATH: 'outputs/agreidv2_CLIPReID_2stage/ViT-B-16_stage1_120.pth'
+  
+  IMS_PER_BATCH: 128
+  MARGIN: 0.2
+  OPTIMIZER_NAME: "Adam"
+  BASE_LR: 0.000005
+  WARMUP_METHOD: 'linear'
+  WARMUP_ITERS: 10
+  WARMUP_FACTOR: 0.1
+  MAX_EPOCHS: 120
+  CHECKPOINT_PERIOD: 121
+  LOG_PERIOD: 5
+  EVAL_PERIOD: 2
+  
+  STEPS: [30, 50, 80]
+
+DATASETS:
+  ROOT_DIR: ('../datasets/')
+  NAMES: ("AGReIDv2")
+  TESTS: ("AGReIDv2", "AGReIDv2_AC","AGReIDv2_CA","AGReIDv2_AW", "AGReIDv2_WA")
+
+TEST:
+  IMS_PER_BATCH: 256
+  RE_RANKING: False
+  WEIGHT: 'outputs/agreidv2_svpr_reid/transformer_best.pth'
+  NECK_FEAT: 'before'
+  FEAT_NORM: 'yes'
+  TIME_MODE: 'mix'
+
+OUTPUT_DIR: 'outputs/agreidv2_svpr_reid'
+
+# nohup CUDA_VISIBLE_DEVICES=0 python train_clipreid_xhao.py --config_file configs/AGReIDv2/vit_clipreid_SVPR_ReID.yml > /dev/null 2>&1 &
+# CUDA_VISIBLE_DEVICES=0 python test_clipreid_xhao.py --config_file configs/AGReIDv2/vit_clipreid_SVPR_ReID.yml

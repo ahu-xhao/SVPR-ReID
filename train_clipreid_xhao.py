@@ -5,16 +5,15 @@ import numpy as np
 import os
 import argparse
 from config import cfg
-# os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 from utils.logger import setup_logger
 from datasets.make_dataloader_xhao import make_dataloader
 from model import make_model
 from processor.processor_clipreid_xhao import do_train_stage1, do_train, do_inference
-from solver.make_optimizer_prompt import make_optimizer_1stage, make_optimizer_2stage, make_optimizer
+from solver.make_optimizer_prompt import make_optimizer_1stage, make_optimizer
 from solver.scheduler_factory import create_scheduler
 from solver.lr_scheduler import WarmupMultiStepLR
-from loss.make_loss import ReIDLoss
+from loss.make_loss import make_loss, ReIDLoss
 
 
 def set_seed(seed):
@@ -31,13 +30,19 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="ReID Baseline Training")
     parser.add_argument(
-        "--config_file", default="configs/CP2000/vit_clipreid_baseline.yml", help="path to config file", type=str
-        # "--config_file", default="configs/CP2000/vit_clipreid_svpr.yml", help="path to config file", type=str
+        # "--config_file", default="configs/CP2108/vit_transreid.yml", help="path to config file", type=str
+        # "--config_file", default="configs/CP2108/vit_secap.yml", help="path to config file", type=str
+        # "--config_file", default="configs/CP2108/vit_clipreid.yml", help="path to config file", type=str
+        # "--config_file", default="configs/CP2108/vit_clipreid_baseline.yml", help="path to config file", type=str
+        "--config_file", default="configs/CP2108/vit_clipreid_SVPR_ReID.yml", help="path to config file", type=str
     )
+    parser.add_argument("opts", help="Modify config options using the command-line", default=None,
+                        nargs=argparse.REMAINDER)
 
     parser.add_argument("opts", help="Modify config options using the command-line", default=None,
                         nargs=argparse.REMAINDER)
     parser.add_argument("--local_rank", default=0, type=int)
+
     args = parser.parse_args()
 
     if args.config_file != "":
@@ -53,7 +58,7 @@ if __name__ == '__main__':
     if output_dir and not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    logger = setup_logger("CLIP-ReID", output_dir, if_train=True)
+    logger = setup_logger("SVPR-ReID", output_dir, if_train=True)
     logger.info("Saving model in the path :{}".format(cfg.OUTPUT_DIR))
     logger.info(args)
 
@@ -112,7 +117,7 @@ if __name__ == '__main__':
         num_query, args.local_rank
     )
 
-    # 测试模型
+    # inference
     for idx, dataset_name in enumerate(cfg.DATASETS.TESTS):
         train_loader, train_loader_normal, val_loader, num_query, num_classes, camera_num, view_num, dataset = make_dataloader(cfg, dataset_name)
         cfg.defrost()

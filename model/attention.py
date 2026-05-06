@@ -2,7 +2,7 @@
 '''
 @Time     : 2024/09/22 13:17:51
 @Author   : XHao
-@Email    : 2510383889@qq.com
+@Email    :  xhao2510@foxmail.com
 '''
 # here put the import lib
 
@@ -80,14 +80,14 @@ class Attention(nn.Module):
         # attn = attn.softmax(dim=-1)
         # attn = self.attn_drop(attn)
         # x = (attn @ v)
-        
+
         x = F.scaled_dot_product_attention(
             q, k, v,
             attn_mask=None,
             dropout_p=self.attn_drop if self.training else 0.0,
             is_causal=False
         )  # [B, num_heads, N_q, head_dim]
-        
+
         x = x.transpose(1, 2).reshape(B, N, C)
         x = self.proj(x)
         x = self.proj_drop(x)
@@ -113,63 +113,8 @@ class Block(nn.Module):
         return x
 
 
-class MaskAttention(nn.Module):
-    def __init__(self, dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0.):
-        super().__init__()
-        self.num_heads = num_heads
-        head_dim = dim // num_heads
-        # NOTE scale factor was wrong in my original version, can set manually to be compat with prev weights
-        self.scale = qk_scale or head_dim ** -0.5
-
-        self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
-        self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = nn.Linear(dim, dim)
-        self.proj_drop = nn.Dropout(proj_drop)
-
-    def forward(self, x, mask=None):
-        B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        q, k, v = qkv[0], qkv[1], qkv[2]  # make torchscript happy (cannot use tensor as tuple)
-
-        attn = (q @ k.transpose(-2, -1)) * self.scale
-        mask = torch.ones((B, 1, N, N), dtype=torch.bool).cuda()
-        attn = attn.masked_fill(~mask.bool(), torch.tensor(-1e3, dtype=torch.float16))  # mask
-        attn = attn.softmax(dim=-1)
-        attn = self.attn_drop(attn)
-
-        x = (attn @ v).transpose(1, 2).reshape(B, N, C)
-        x = self.proj(x)
-        x = self.proj_drop(x)
-        return x
-
-
-class AttentionBlock(nn.Module):
-
-    def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
-                 drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
-        super().__init__()
-        self.norm1 = norm_layer(dim)
-        self.attn = Attention(
-            dim, num_heads=num_heads, qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
-        # NOTE: drop path for stochastic depth, we shall see if this is better than dropout here
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
-        self.norm2 = norm_layer(dim)
-        mlp_hidden_dim = int(dim * mlp_ratio)
-        self.mlp = MLP(in_dim=dim, hidden_dim=mlp_hidden_dim, act_layer=act_layer, drop=drop)
-        # self.tem = TokenEnhancement_CNN(monument=0.1)
-
-    def forward(self, x, use_attention=True, use_mlp=True):
-        if use_attention:
-            x = x + self.drop_path(self.attn(self.norm1(x)))
-        # else:
-        #     x = x + self.drop_path(self.tem(self.norm1(x)))
-        if use_mlp:
-            x = x + self.drop_path(self.mlp(self.norm2(x)))
-        return x
-
-
 class CrossAttention(nn.Module):
-    def __init__(self, dim,  num_heads=8, downsample_rate: int = 1, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0.):
+    def __init__(self, dim, num_heads=8, downsample_rate: int = 1, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0.):
         super().__init__()
         self.normy = nn.LayerNorm(dim)
         self.num_heads = num_heads
@@ -185,14 +130,18 @@ class CrossAttention(nn.Module):
         self.proj = nn.Linear(self.hidden_dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
 
-    def forward(self, q, k, v=None,return_attn=False):
+    def forward(self, q, k, v=None, return_attn=False):
         q_dim = q.dim()
         k_dim = k.dim()
 
-        if q_dim == 2:q = q.unsqueeze(1)
-        if k_dim == 2:k = k.unsqueeze(1)
-        if v is None: v = k
-        if v.dim() == 2: v = v.unsqueeze(1)
+        if q_dim == 2:
+            q = q.unsqueeze(1)
+        if k_dim == 2:
+            k = k.unsqueeze(1)
+        if v is None:
+            v = k
+        if v.dim() == 2:
+            v = v.unsqueeze(1)
 
         B_q, N_q, _ = q.shape
         B_k, N_k, _ = k.shape
@@ -213,7 +162,7 @@ class CrossAttention(nn.Module):
             dropout_p=self.attn_drop if self.training else 0.0,
             is_causal=False
         )  # [B, num_heads, N_q, head_dim]
-        
+
         x = x.transpose(1, 2).reshape(B_q, N_q, C)
 
         x = self.proj(x)
@@ -235,7 +184,7 @@ class CrossAttentionBlock(nn.Module):
         mlp_hidden_dim = int(dim * mlp_ratio)
         self.mlp = MLP(in_dim=dim, hidden_dim=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
-    def forward(self, q, k, v=None, use_mlp=True,return_attn=False):
+    def forward(self, q, k, v=None, use_mlp=True, return_attn=False):
         if return_attn:
             q, attn = self.attn(self.norm1(q), k, v if v is not None else k, return_attn=True)
         else:
@@ -258,8 +207,8 @@ class ViewAttentionBlock(nn.Module):
 
     def forward(self, x, y, use_mlp=True):
         assert x.dim() == 3 and y.dim() == 3, 'Input tensor dim must be 3. but got x: {}, y: {}'.format(x.shape, y.shape)
-        x_cls = self.CAB(x[:, :1, :], y[:, 1:, :],y[:, 1:, :], use_mlp)
-        y_cls = self.CAB(y[:, :1, :], x[:, 1:, :],x[:, 1:, :], use_mlp)
+        x_cls = self.CAB(x[:, :1, :], y[:, 1:, :], y[:, 1:, :], use_mlp)
+        y_cls = self.CAB(y[:, :1, :], x[:, 1:, :], x[:, 1:, :], use_mlp)
         x = torch.cat([x_cls, x[:, 1:, :]], dim=-2)
         y = torch.cat([y_cls, y[:, 1:, :]], dim=-2)
         return x, y
@@ -309,7 +258,7 @@ class SCAttentionBlock(nn.Module):
         queries = self.norm3(queries)
 
         return queries
-    
+
     def forward_self(self, q, k=None, v=None):
         queries = self.norm1(q)
         queries = queries + self.attn(queries)
@@ -318,18 +267,18 @@ class SCAttentionBlock(nn.Module):
         queries = queries + mlp_out
         queries = self.norm3(queries)
         return queries
-    
+
     def forward_cross(self, q, k, v=None):
         attn_out = self.cross_attn(q, k)
         queries = q + attn_out
         queries = self.norm1(queries)
-        
+
         mlp_out = self.mlp(queries)
         queries = queries + mlp_out
         queries = self.norm3(queries)
-        
+
         return queries
-    
+
     def forward(self, q, k, v):
         return self.forward_cross_self(q, k, v)
 
@@ -647,7 +596,7 @@ class AttentionScoreMask(nn.Module):
 
 
 if __name__ == '__main__':
-    
+    # tem = TokenEnhancement_CNN()
     CA = CrossAttentionBlock(768)
     q = torch.randn(128, 1, 768)
     kv = torch.randn(128, 128, 768)

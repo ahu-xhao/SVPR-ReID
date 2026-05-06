@@ -1,0 +1,77 @@
+MODEL:
+  PRETRAIN_PATH: '../pretrain_model/CLIP-ViT-B-16.pt'
+  METRIC_LOSS_TYPE: 'triplet'
+  IF_LABELSMOOTH: 'on'
+  IF_WITH_CENTER: 'no'
+  NAME: 'ViT-B-16'
+  ARCH_NAME: 'CLIP_ReID'
+  STRIDE_SIZE: [16, 16]
+  ID_LOSS_WEIGHT : 0.25
+  TRIPLET_LOSS_WEIGHT : 1.0
+  I2T_LOSS_WEIGHT : 1.0
+  # SIE_CAMERA: True
+  # SIE_COE : 1.0
+
+INPUT:
+  SIZE_TRAIN: [256, 128]
+  SIZE_TEST: [256, 128]
+  PROB: 0.5 # random horizontal flip
+  RE_PROB: 0.5 # random erasing
+  PADDING: 10
+  PIXEL_MEAN: [0.5, 0.5, 0.5]
+  PIXEL_STD: [0.5, 0.5, 0.5]
+
+DATALOADER:
+  SAMPLER: 'softmax_triplet'
+  NUM_INSTANCE: 8
+  NUM_WORKERS: 8
+
+DATASETS:
+  ROOT_DIR: ('../datasets/')
+  NAMES: ("AGReIDv2")
+  TESTS: ("AGReIDv2", "AGReIDv2_AC","AGReIDv2_CA","AGReIDv2_AW", "AGReIDv2_WA")
+
+SOLVER:
+  STAGE1:
+    TRAIN: True
+    IMS_PER_BATCH: 128
+    OPTIMIZER_NAME: "Adam"
+    BASE_LR: 0.00035
+    LR_MIN: 1e-6
+    WARMUP_LR_INIT: 0.00001
+    WARMUP_METHOD: 'linear'
+    MAX_EPOCHS: 120
+    CHECKPOINT_PERIOD: 120
+    LOG_PERIOD: 5
+    WARMUP_EPOCHS: 5
+
+    # TRAIN: False
+    # PRETRAIN_PATH: 'outputs/agreidv2_CLIPReID_2stage/ViT-B-16_stage1_120.pth'
+  
+  IMS_PER_BATCH: 128
+  OPTIMIZER_NAME: "Adam"
+  BASE_LR: 0.000005
+  WARMUP_METHOD: 'linear'
+  WARMUP_ITERS: 10
+  WARMUP_FACTOR: 0.1
+  MAX_EPOCHS: 60
+  CHECKPOINT_PERIOD: 61
+  LOG_PERIOD: 5
+  EVAL_PERIOD: 2
+  
+  STEPS: [30, 50]
+  
+TEST:
+  IMS_PER_BATCH: 256
+  RE_RANKING: False
+  WEIGHT: 'outputs/agreidv2_CLIPReID_2stage/transformer_best.pth'
+  NECK_FEAT: 'before'
+  FEAT_NORM: 'yes'
+  TIME_MODE: 'mix'
+
+OUTPUT_DIR: 'outputs/agreidv2_CLIPReID_2stage'
+
+
+
+# CUDA_VISIBLE_DEVICES=1 python train_clipreid.py --config_file configs/AGReIDv2/vit_clipreid.yml
+

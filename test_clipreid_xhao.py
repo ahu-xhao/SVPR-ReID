@@ -1,7 +1,7 @@
 import os
 from config import cfg
 import argparse
-# os.environ['CUDA_VISIBLE_DEVICES'] = '7'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 from datasets.make_dataloader_xhao import make_dataloader
 from model import make_model
@@ -12,8 +12,11 @@ from utils.logger import setup_logger
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ReID Baseline Training")
     parser.add_argument(
-        "--config_file", default="configs/CP2000/vit_clipreid_baseline.yml", help="path to config file", type=str
-        # "--config_file", default="configs/CP2000/vit_clipreid_svpr_reid.yml", help="path to config file", type=str
+        # "--config_file", default="configs/CP2108/vit_transreid.yml", help="path to config file", type=str
+        # "--config_file", default="configs/CP2108/vit_secap.yml", help="path to config file", type=str
+        # "--config_file", default="configs/CP2108/vit_clipreid.yml", help="path to config file", type=str
+        # "--config_file", default="configs/CP2108/vit_clipreid_baseline.yml", help="path to config file", type=str
+        "--config_file", default="configs/CP2108/vit_clipreid_SVPR_ReID.yml", help="path to config file", type=str
     )
     parser.add_argument("opts", help="Modify config options using the command-line", default=None,
                         nargs=argparse.REMAINDER)

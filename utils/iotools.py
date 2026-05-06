@@ -1,7 +1,7 @@
 # encoding: utf-8
 """
-@author:  sherlock
-@contact: sherlockliao01@gmail.com
+@author:  hao xie
+@contact: xhao2510@foxmail.com
 """
 
 import errno

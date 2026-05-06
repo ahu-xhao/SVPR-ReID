@@ -2,7 +2,7 @@
 '''
 @Time     : 2023/12/26 09:39:54
 @Author   : XHao
-@Email    : 2510383889@qq.com
+@Email    : xhao2510@foxmail.com
 '''
 # here put the import lib
 
@@ -40,7 +40,7 @@ class CARGO(BaseImageDataset):
             self.use_attr = self.cfg.MODEL.USE_ATTR
             self.text_prompt = 'X ' * self.cfg.MODEL.TEXT_PROMPT if self.cfg.MODEL.TEXT_PROMPT > 0 else ""
             self.text_format = self.cfg.MODEL.TEXT_FORMAT
-        
+
         self.attribute_anno = {}
         self.attribute_map = {}
         self.attribute_names = []

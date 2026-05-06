@@ -1,7 +1,7 @@
 # encoding: utf-8
 """
-@author:  liaoxingyu
-@contact: sherlockliao01@gmail.com
+@author:  hao xie
+@contact: xhao2510@foxmail.com
 """
 from bisect import bisect_right
 import torch

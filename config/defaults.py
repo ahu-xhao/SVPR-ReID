@@ -42,11 +42,12 @@ _C.MODEL.USE_TEXT = False
 _C.MODEL.TEXT_PROMPT = 0
 _C.MODEL.TEXT_LEN = 77
 _C.MODEL.TEXT_TYPE = 'attribute'  # Type of text input (options: 'captions', 'attribute')
-_C.MODEL.TEXT_FORMAT = 'hybird'
+_C.MODEL.TEXT_FORMAT = 'depart'   # Format of text input (options: 'hybird', 'depart')
 _C.MODEL.USE_ATTR = False
 
 # Visual Prompt settings
 _C.MODEL.VISUAL_PROMPT = 0  # Whether to use visual prompt or length of visual prompt
+_C.MODEL.VIEW_PROMPT = 0  # Whether to use visual prompt or length of visual prompt
 # Head settings
 _C.MODEL.HEAD_UNIFORM = False   # Whether to use contact features
 
