@@ -1,6 +1,8 @@
 # SVPR-ReID🌱
 
-SVPR-ReID: Semantic-Driven Visual Progressive Refinement for Aerial-Ground Person ReID: A Challenging Large-Scale Benchmark (AAAI 2026 Poster)
+SVPR-ReID: Semantic-Driven Visual Progressive Refinement for Aerial-Ground Person ReID: A Challenging Large-Scale Benchmark (AAAI 2026 Poster)  [PDF](./assets/Camera_Ready_AAAI26_SVPR_ReID.pdf)  [Code](https://github.com/ahu-xhao/SVPR-ReID)   
+
+(The Supplementary could be find in [Supplementary](./assets/Supplementary_AAAI26_SVPR_ReID.pdf))
 
 ### Updates👨‍💻
 
@@ -46,13 +48,13 @@ We will update more detailed result (including dataset, training, verification) 
 
 ### Setup
 
-You need to “cd” the project dir ！！！
+**You need to “cd” the project dir ！！！**
 
 #### step1 Environments:
 
 run the basic python environments as follows （following by CLIP-ReID）：
 
-```c
+```
 sh setup.sh
 ```
 
@@ -89,8 +91,6 @@ Then run：
 CUDA_VISIBLE_DEVICES=3 python train_clipreid_xhao.py --config_file configs/CP2108/vit_clipreid_SVPR_ReID.yml
 ```
 
-
-
 ### Evaluation🔧
 
 For example, if you want to test ViT-based CLIP-ReID Baseline for CP2108 :
@@ -99,13 +99,9 @@ For example, if you want to test ViT-based CLIP-ReID Baseline for CP2108 :
 CUDA_VISIBLE_DEVICES=3 python test_clipreid_xhao.py --config_file configs/CP2108/vit_clipreid_SVPR_ReID.yml
 ```
 
-
-
 ### Acknowledgement
 
 Codebase from [TransReID](https://github.com/damo-cv/TransReID), [CLIP](https://github.com/openai/CLIP), and [CoOp](https://github.com/KaiyangZhou/CoOp)
-
-
 
 ### Citation
 
@@ -120,4 +116,3 @@ Codebase from [TransReID](https://github.com/damo-cv/TransReID), [CLIP](https://
   year={2026}
 }
 ```
-
