@@ -1,5 +1,5 @@
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '7'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '7'
 from config import cfg
 import argparse
 from datasets.make_dataloader_xhao import make_dataloader

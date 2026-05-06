@@ -1,0 +1,64 @@
+MODEL:
+  DEVICE_ID: ('1')
+  PRETRAIN_PATH: '../pretrain_model/jx_vit_base_p16_224-80ecf9dd.pth'
+  NAME: 'vit_base_patch16_224_TransReID'
+  ARCH_NAME: 'TransReID'
+  STRIDE_SIZE: [16, 16]
+  ID_LOSS_WEIGHT : 1.
+  # xhao
+  USE_TEXT: False
+  TEXT_PROMPT: 2                               # Num of text prompt ("X ")
+  TEXT_LEN: 120                                # context length of text for clip tokenlizer
+  HEAD_UNIFORM: False 
+
+INPUT:
+  SIZE_TRAIN: [256, 128]
+  SIZE_TEST: [256, 128]
+  PROB: 0.5 # random horizontal flip
+  RE_PROB: 0.5 # random erasing
+  PADDING: 10
+  PIXEL_MEAN: [0.5, 0.5, 0.5]
+  PIXEL_STD: [0.5, 0.5, 0.5]
+
+DATALOADER:
+  SAMPLER: 'softmax_triplet'
+  SAMPLER_NAME: 'RandomIdentitySampler'
+  AUG: False
+  NUM_INSTANCE: 8
+  NUM_WORKERS: 8
+
+SOLVER:
+  STAGE1:
+    TRAIN: False
+    # PRETRAIN_PATH: 'outputs/agreidv2_CLIPReID_2stage/ViT-B-16_stage1_120.pth'
+
+  IMS_PER_BATCH: 128
+  OPTIMIZER_NAME: 'SGD'
+  BASE_LR: 0.008
+  WARMUP_METHOD: 'linear'
+  WARMUP_ITERS: 5
+  WARMUP_FACTOR: 0.01
+  MAX_EPOCHS: 120
+  CHECKPOINT_PERIOD: 121
+  LOG_PERIOD: 5
+  EVAL_PERIOD: 2
+  
+  STEPS: [30, 50]
+
+DATASETS:
+  ROOT_DIR: ('../datasets/')
+  NAMES: ("AGReIDv2")
+  TESTS: ("AGReIDv2", "AGReIDv2_AC","AGReIDv2_CA","AGReIDv2_AW", "AGReIDv2_WA")
+
+TEST:
+  IMS_PER_BATCH: 256
+  RE_RANKING: False
+  WEIGHT: 'outputs/agreidv2_transreid/transformer_best.pth'
+  NECK_FEAT: 'before'
+  FEAT_NORM: 'yes'
+  TIME_MODE: 'mix'
+
+OUTPUT_DIR: 'outputs/agreidv2_transreid'
+
+# CUDA_VISIBLE_DEVICES=2 python train_clipreid_xhao.py --config_file configs/AGReIDv2/vit_transreid.yml
+# CUDA_VISIBLE_DEVICES=2 python test_clipreid_xhao.py --config_file configs/AGReIDv2/vit_transreid.yml

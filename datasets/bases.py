@@ -7,7 +7,7 @@ import logging
 from PIL import Image, ImageFile
 
 from torch.utils.data import Dataset
-from utils.simple_tokenizer import SimpleTokenizer,tokenize
+from utils.simple_tokenizer import SimpleTokenizer, tokenize
 import os.path as osp
 from pathlib import Path
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -90,9 +90,6 @@ class BaseImageDataset(BaseDataset):
         # print("  ----------------------------------------")
 
 
-
-
-
 class ImageDataset(Dataset):
     def __init__(self, dataset, transform=None, text_length: int = 77, truncate: bool = True):
         self.dataset = dataset
@@ -126,9 +123,6 @@ class ImageDataset(Dataset):
                 return img, pid, camid, trackid, img_path.split('/')[-1]
 
 
-from .data_aug import random_rotate_image, style_transfer
-
-
 class ImageDataset_aug(Dataset):
     def __init__(self, dataset, transform=None, augment=False, text_length: int = 77, truncate: bool = True):
         self.dataset = dataset
@@ -143,44 +137,6 @@ class ImageDataset_aug(Dataset):
     def __len__(self):
         return len(self.dataset)
 
-    def __getitem2__(self, index):
-        if len(self.dataset[index]) == 5:
-            img_path, pid, camid, viewid, timeid = self.dataset[index]
-            text_tokens = None
-        elif len(self.dataset[index]) == 6:  # use timeid and text
-            img_path, pid, camid, viewid, timeid, text_attr = self.dataset[index]
-            text, attr = text[0], text[1]
-            if text:
-                if self.sentence:
-                    sentences = text.split(".")
-                    text_tokens = [tokenize(s, tokenizer=self.tokenizer, text_length=self.text_length, truncate=self.truncate) for s in sentences]
-                else:
-                    text_tokens = tokenize(text, tokenizer=self.tokenizer, text_length=self.text_length, truncate=self.truncate)
-            else:
-                text_tokens = None
-        else:
-            img_path, pid, camid, viewid = self.dataset[index]
-            timeid = 1
-            text_tokens = None
-            attr = None
-        
-        img = read_image(img_path)
-        if self.augment:
-            if timeid == 0:
-                img_aug = style_transfer(img, brightness=1.8, contrast=1.5, color=0.2, sharpness=0.5)
-            else:
-                img_aug = style_transfer(img, brightness=0.2, contrast=1.5, color=0.2, sharpness=0.5)
-            img_aug = random_rotate_image(img_aug, -90, 90)
-            if self.transform:
-                img = self.transform(img)
-                img_aug = self.transform(img_aug)
-            return [img, img_aug], pid, camid, viewid, timeid, img_path.split('/')[-1], text_tokens
-
-        else:
-            if self.transform:
-                img = self.transform(img)
-            return img, pid, camid, viewid, timeid, img_path.split('/')[-1], text_tokens
-
     def __getitem__(self, index):
         if len(self.dataset[index]) == 5:
             img_path, pid, camid, viewid, timeid = self.dataset[index]
@@ -190,28 +146,16 @@ class ImageDataset_aug(Dataset):
             img_path, pid, camid, viewid, timeid, text_attr = self.dataset[index]
             text, attr = text_attr[0], text_attr[1]
             if text is not None:
-                # if self.sentence:
-                #     sentences = text.split(".")
-                #     text_tokens = [tokenize(s, tokenizer=self.tokenizer, text_length=self.text_length, truncate=self.truncate) for s in sentences]
-                # else:
-                #     text_tokens = tokenize(text, tokenizer=self.tokenizer, text_length=self.text_length, truncate=self.truncate)
                 text_tokens = tokenize(text, tokenizer=self.tokenizer, text_length=self.text_length, truncate=self.truncate)
             else:
                 text_tokens = None
-            # text_tokens = text
         else:
             img_path, pid, camid, viewid = self.dataset[index]
             timeid = 1
             text_tokens = None
             attr = None
         img = read_image(img_path)
-        if self.augment:
-            if random.random() < 0.5:
-                if timeid == 0:
-                    img = style_transfer(img, brightness=1.8, contrast=1.5, color=0.2, sharpness=0.5)
-                else:
-                    img = style_transfer(img, brightness=0.2, contrast=1.5, color=0.2, sharpness=0.5)
-            # img_aug = random_rotate_image(img_aug, -90, 90)
+
         if self.transform:
             img = self.transform(img)
         return img, pid, camid, viewid, timeid, img_path.split('/')[-1], text_tokens, attr

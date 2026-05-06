@@ -1,18 +1,18 @@
 # coding=utf-8
 '''
-@Time     : 2025/04/22 04:00:53
+@Time     : 2025/06/22 04:00:53
 @Author   : XHao
 @Email    : 2510383889@qq.com
 '''
 # here put the import lib
 # officical packages
+from collections import defaultdict
 import logging
 import os
 from termcolor import colored
 # torch packages
 import torch
 import torch.nn as nn
-from torch.cuda import amp
 import torch.distributed as dist
 from torch.nn import functional as F
 # local packages
@@ -47,7 +47,7 @@ def do_train_stage1(cfg,
             model = nn.DataParallel(model)
 
     loss_meter = AverageMeter()
-    scaler = amp.GradScaler()
+    scaler = torch.amp.GradScaler()
     xent = SupConLoss(device)
 
     # train
@@ -65,7 +65,7 @@ def do_train_stage1(cfg,
             target = vid.to(device)
             views_t = target_view.to(device)
             times_t = target_time.to(device)
-            with amp.autocast(enabled=True):
+            with torch.amp.autocast(enabled=True):
                 image_feature = model(img, target, get_image=True)
                 for i, v, t, img_feat in zip(target, views_t, times_t, image_feature):
                     labels.append(i)
@@ -101,7 +101,7 @@ def do_train_stage1(cfg,
             view = views_list[b_list]
             time_ = times_list[b_list]
             image_features = image_features_list[b_list]
-            with amp.autocast(enabled=True):
+            with torch.amp.autocast(enabled=True):
                 text_features = model(label=target, view_label=view, time_label=time_, get_text=True)
             loss_i2t = xent(image_features, text_features, target, target)
             loss_t2i = xent(text_features, image_features, target, target)
@@ -148,20 +148,17 @@ def do_train(cfg,
              scheduler,
              loss_fn,
              num_query, local_rank):
-    # log_period = cfg.SOLVER.LOG_PERIOD
-    # for n_iter, _ in enumerate(train_loader_stage2):
-    #     pass
+
     iters_per_ehoch = len(train_loader_stage2) + 1
     log_period = iters_per_ehoch // (cfg.SOLVER.LOG_PERIOD - 1)
 
     checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
     eval_period = cfg.SOLVER.EVAL_PERIOD
-    # instance = cfg.DATALOADER.NUM_INSTANCE
 
     device = "cuda"
     epochs = cfg.SOLVER.MAX_EPOCHS
 
-    logger = logging.getLogger("CLIP-ReID.train")
+    logger = logging.getLogger("SVPR-ReID.train")
     logger.info('start training')
     _LOCAL_PROCESS_GROUP = None
     if device:
@@ -178,7 +175,7 @@ def do_train(cfg,
     acc_meter = AverageMeter()
 
     evaluator = R1_mAP_eval(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM, cfg=cfg)
-    scaler = amp.GradScaler()
+    scaler = torch.amp.GradScaler()
     # xent = SupConLoss(device)
 
     # train
@@ -187,22 +184,12 @@ def do_train(cfg,
     all_start_time = time.monotonic()
 
     # train
-    batch = cfg.SOLVER.IMS_PER_BATCH
-    i_ter = num_classes // batch
-    left = num_classes - batch * (num_classes // batch)
-    if left != 0:
-        i_ter = i_ter + 1
-    text_features = []
-    # with torch.no_grad():
-    #     for i in range(i_ter):
-    #         if i + 1 != i_ter:
-    #             l_list = torch.arange(i * batch, (i + 1) * batch)
-    #         else:
-    #             l_list = torch.arange(i * batch, num_classes)
-    #         with amp.autocast(enabled=True):
-    #             text_feature = model(label=l_list, get_text=True)
-    #         text_features.append(text_feature.cpu())
-    #     text_features = torch.cat(text_features, 0).cuda()
+    # batch = cfg.SOLVER.IMS_PER_BATCH
+    # i_ter = num_classes // batch
+    # left = num_classes - batch * (num_classes // batch)
+    # if left != 0:
+    #     i_ter = i_ter + 1
+
     best_model_info = {'epoch': 0, 'mAp': 0, 'mINP': 0, 'rank1': 0, 'rank5': 0}
     for epoch in range(1, epochs + 1):
         start_time = time.time()
@@ -223,7 +210,7 @@ def do_train(cfg,
             if text is not None:
                 text = [t.to(device) if t is not None else None for t in text]
 
-            with amp.autocast(enabled=True):
+            with torch.amp.autocast(enabled=True, device_type=device):
                 model_name = cfg.MODEL.ARCH_NAME
                 if model_name in ['TransReID', 'ViT']:
                     score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
@@ -235,18 +222,10 @@ def do_train(cfg,
                     score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
                     loss = loss_fn(score[:-1], feat[:-1], target, target_cam)
                     logits = score[0]
-                    # loss_view = loss_fn.get_id_loss(score[-1:], None, target_view)
+
                     loss_view = loss_fn.get_view_loss(score[-1], feat[-1], feat[0], target_view, view_lambda=0.1)
                     loss_add = torch.tensor(0.) if len(feat[:-1]) == 1 else loss_fn.get_pts_loss(feat[:-1])
                     loss = loss + loss_view * 1.0 + loss_add * 0.1
-
-                elif model_name in ['CLIP_View']:
-                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
-                    loss = loss_fn(score[:-1], feat[:-1], target, target_cam)
-                    logits = score[0]
-                    loss_add = loss_fn.get_view_loss(score[-1], feat[-1], feat[0], target_view)
-                    loss_add += torch.tensor(0.) if len(feat[:-1]) == 1 else loss_fn.get_pts_loss(feat[:-1])
-                    loss = loss + loss_add * 1.0
 
                 elif model_name == 'SeCap':
                     score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
@@ -255,97 +234,31 @@ def do_train(cfg,
                     loss_add = loss_fn.get_view_loss(score[-1], feat[-1], feat[0], target_view, view_lambda=0.1)
                     loss = loss + loss_add
 
-                elif model_name == 'CLIP_view_attrText_cvpr_local':
+                elif model_name == 'CLIP_SVPR_ReID':
                     score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time, text=text)
                     logits = score[0]
                     loss = loss_fn(score[:-2], [*feat[:-3], feat[-2]], target, target_cam, add_type='other')
                     loss_attr = score[-2]
                     loss_view = loss_fn.get_view_loss(score[-1], feat[-1], feat[0], target_view, view_lambda=1.)
-                    # loss_add = torch.tensor(0.) if len(feat[:-1]) == 1 else loss_fn.get_pts_loss(feat[:-1])
+
                     loss_add = torch.tensor(0.)  # attr loss
                     loss = loss + loss_view + loss_add * 0.05 + loss_attr * 0.05
 
-                elif model_name in ['CLIP', 'CLIP_prompt', 'CLIP_GCA']:
+                elif model_name in ['CLIP_baseline']:
                     # ~~~~~~~ CLIP-ReID ~~~~~~~~
-                    score, feat, image_features = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
-                    logits = image_features @  text_features.t()
-                    loss = loss_fn(score, feat, target, target_cam, i2tscore=logits)
-                    loss_add = torch.tensor(0.)
-
-                elif model_name in ['CLIP_baseline', 'CLIP_text', 'CLIP_text_ca', 'CLIP_Attr']:
-                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time, text=text)
-                    # logits = image_features @  text_features.t()
-                    logits = score[0]
-                    # logits = torch.stack(score, dim=1).mean(dim=1)
+                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
                     loss = loss_fn(score, feat, target, target_cam)
                     loss_add = torch.tensor(0.)
-
-                elif model_name in ['CLIP_CVPR']:
-                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time, text=text)
-                    logits = score[0]
-                    loss = loss_fn(score, feat, target, target_cam)
-
-                    loss_add = loss_fn.get_pts_loss(feat[:-1])
-                    loss = loss + loss_add * 0.1
-                elif model_name == 'CLIP_inverseText_localPatchs_CVPR':
-                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time, text=text)
-                    # logits = image_features @  text_features.t()
-                    # logits = torch.mean(torch.stack(score), dim=1)
-                    logits = score[0]
-                    loss = loss_fn(score, feat, target, target_cam, add_type='other')
-                    loss_add = loss_fn.get_pts_loss(feat[:-1]) * 0.1
                     loss += loss_add
-
-                elif model_name == 'CLIP_text_prompt_localPatchs_CVPR':
-                    score, feat = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time, text=text)
                     logits = score[0]
-                    loss = loss_fn(score, feat, target, target_cam, add_type='other')
-                    # loss_add = loss_fn.get_pts_loss(feat[:-1])
-                    # loss += loss_add * 0.1
-                    loss_add = torch.tensor(0.)
-                    # loss = loss
 
-                elif model_name == 'CLIP_GLView':
-                    score, feat, image_features, loss_add = model(
-                        x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time,
-                        # text_feats=text_features
-                    )
-                    logits = image_features @  text_features.t()
-                    loss = loss_fn(score, feat, target, target_cam, i2tscore=logits)
-                    loss += loss_add
-
-                elif model_name == 'CLIP_PTS':
-                    score, feat, image_features = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
-                    logits = image_features @  text_features.t()
-                    loss = loss_fn(score[:2], feat[:3], target, target_cam, i2tscore=logits)
-                    loss_pts_id = loss_fn.get_id_loss(score[2:], feat[3:], target, add_type='mean')
-                    loss_pts_tri = loss_fn.get_triplet_loss(score[2:], feat[3:], target, add_type='mean')
-                    loss_pts_feat = loss_fn.get_pts_loss([feat[:, 1], feat[:, -3], feat[:, -2], feat[:, -1]])
-                    pts_weight = 0.1
-                    loss_add = loss_pts_id * pts_weight + loss_pts_tri * pts_weight + loss_pts_feat * pts_weight
-
-                    loss += loss_add
-
-                elif model_name == 'CLIP_AUG':
-                    score, feat, image_features = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
-                    logits = image_features @  text_features.t()
-                    loss = loss_fn(score, feat, target, target_cam, i2tscore=logits)
-                    # loss_aug_id = loss_fn.get_id_loss(score[2:], feat[2:], target)
-                    # loss_aug_tri = loss_fn.get_triplet_loss(score[2:], feat[2:], target)
-                    # loss_add = loss_aug_id + loss_aug_tri
-                    # loss += loss_add
-                    loss_add = torch.tensor(0.)
                 elif model_name == 'CLIP_LATEX':
                     score, feat, image_features = model(x=img, label=target, cam_label=target_cam, view_label=target_view, time_label=target_time)
                     text_features = feat[-1]
                     loss = loss_fn(score, feat, target, target_cam)
                     loss_add = nn.MSELoss()(image_features, text_features)
-                    # loss_aug_id = loss_fn.get_id_loss(score[2:], feat[2:], target)
-                    # loss_aug_tri = loss_fn.get_triplet_loss(score[2:], feat[2:], target)
-                    # loss_add = loss_aug_id + loss_aug_tri
                     loss += loss_add
                     logits = score[0]
-                    # loss_add = torch.tensor(0.)
 
             scaler.scale(loss).backward()
 
@@ -378,7 +291,7 @@ def do_train(cfg,
         if cfg.MODEL.DIST_TRAIN:
             pass
         else:
-            logger.info("Epoch {}(total {} iters) done. Time per batch: {:.3f}[s] Speed: {:.1f}[samples/s]"
+            logger.info("Epoch {}(total {} iters) done. Time per batch: {:.3f}[s] Speed: {:.1f}[storch.amples/s]"
                         .format(epoch, n_iter, time_per_batch, train_loader_stage2.batch_size / time_per_batch))
 
         if epoch % checkpoint_period == 0:
@@ -425,7 +338,7 @@ def do_train(cfg,
                             text = [t.to(device) if t is not None else None for t in text]
                         feat = model(img, cam_label=camids, view_label=target_view, time_label=target_time, text=text)
                         # evaluator.update((feat, vid, camid, timeids))
-                        evaluator.update((feat, vid, camid, viewids, timeids, imgpath, img))
+                        evaluator.update((feat, vid, camid, timeids, imgpath, img))
                 # cmc, mAP, mINP, _, _, _, _, _ = evaluator.compute()
                 time_mode = cfg.TEST.TIME_MODE
                 cmc, mAP, mINP, _, _, _, _, _ = evaluator.new_compute(time_mode=time_mode, visualizer=None)
@@ -458,14 +371,14 @@ def do_inference(cfg,
                  val_loader,
                  num_query):
     device = "cuda"
-    logger = logging.getLogger("CLIP-ReID.test")
+    logger = logging.getLogger("SVPR-ReID.test")
     logger.info("Enter inferencing")
 
     evaluator = R1_mAP_eval(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM, cfg=cfg, is_training=False)
     evaluator.reset()
 
     use_grad = False
-
+    # visualizer = Visualizer_DiY(cfg, model, dataset_name=dataset_name, actmap_layers=['BACKBONE.visual.transformer.resblocks.11'])
     if device:
         if torch.cuda.device_count() > 1:
             print('Using {} GPUs for inference'.format(torch.cuda.device_count()))
@@ -475,7 +388,7 @@ def do_inference(cfg,
     model.eval()
 
     for n_iter, (img, pid, camid, camids, viewids, timeids, imgpath, text) in enumerate(val_loader):
-        diy_context = torch.cuda.amp.autocast if use_grad else torch.no_grad
+        diy_context = torch.amp.autocast if use_grad else torch.no_grad
         with diy_context():
             img = img.to(device)
             camids = camids.to(device)

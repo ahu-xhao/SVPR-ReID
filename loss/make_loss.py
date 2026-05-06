@@ -4,7 +4,6 @@
 @contact: sherlockliao01@gmail.com
 """
 
-from cv2 import add
 import torch
 import torch.nn.functional as F
 from .softmax_loss import CrossEntropyLabelSmooth, LabelSmoothingCrossEntropy
@@ -192,7 +191,7 @@ class ReIDLoss:
     #     pts_loss = sum(pts_loss) / len(pts_loss) if len(pts_loss) > 0 else 0.
 
     #     return pts_loss
-    
+
     def get_pts_loss(self, feat_list, margin=0.1):
         losses = []
         for i in range(len(feat_list)):

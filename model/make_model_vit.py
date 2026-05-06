@@ -13,7 +13,7 @@ from timm.layers import DropPath, to_2tuple, trunc_normal_
 import logging
 from .backbone.vit_trans import vit_base_patch16_224_TransReID, vit_small_patch16_224_TransReID
 from .backbone.vit_view_decouple import vit_base_patch16_224_VDT
-logger = logging.getLogger("CLIP-ReID.model")
+logger = logging.getLogger("SVPR-ReID.model")
 factory = {
     'vit_base_patch16_224_TransReID': vit_base_patch16_224_TransReID,
     'vit_small_patch16_224_TransReID': vit_small_patch16_224_TransReID,
@@ -59,8 +59,8 @@ class Header(nn.Module):
         cls_score = self.classifier(feat_bn)
 
         return cls_score, feat_bn
-   
-    
+
+
 class ViT(nn.Module):
     def __init__(self, num_classes, camera_num, view_num, cfg):
         super().__init__()
@@ -123,6 +123,7 @@ class ViT(nn.Module):
         for i in param_dict:
             self.state_dict()[i.replace('module.', '')].copy_(param_dict[i])
         print('Loading pretrained model from {}'.format(trained_path))
+
 
 def shuffle_unit(features, shift, group, begin=1):
 
@@ -315,37 +316,37 @@ class VDT(nn.Module):
         mlp_ratio = {'small': 3., 'base': 4, }[depth]
         qkv_bias = {'small': False, 'base': True}[depth]
         qk_scale = {'small': 768 ** -0.5, 'base': None}[depth]
-        
+
         self.BACKBONE = factory[cfg.MODEL.NAME](img_size=cfg.INPUT.SIZE_TRAIN, stride_size=cfg.MODEL.STRIDE_SIZE, sie_xishu=cfg.MODEL.SIE_COE,
                                                 num_classes=num_classes, camera=self.cam_num, view=self.view_num,
                                                 drop_path_rate=cfg.MODEL.DROP_PATH, drop_rate=cfg.MODEL.DROP_OUT, attn_drop_rate=cfg.MODEL.ATT_DROP_RATE,
                                                 # num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
                                                 inner_sub=True)
         self.BACKBONE.load_param(self.pretrain_path)
-        
+
         self.header = Header(self.in_planes, self.num_classes)
         self.header_view = Header(self.in_planes, view_num)
-        
-    def forward(self, x=None, label=None, cam_label=None, view_label=None, time_label=None, text=None,test_score=False):
+
+    def forward(self, x=None, label=None, cam_label=None, view_label=None, time_label=None, text=None, test_score=False):
         B = x.shape[0]
         features = self.BACKBONE(x, cam_label=cam_label)
         global_features = features[:, 0:1]
         view_features = features[:, 1:2]
         # local_feat = features[:, 2:]
         # inv_features = global_features - view_features
-        
-        global_features = global_features.view(B,-1)
-        view_features = view_features.view(B,-1)
-       
+
+        global_features = global_features.view(B, -1)
+        view_features = view_features.view(B, -1)
+
         cls_score, global_feat_bn = self.header(global_features)
-        cls_score_view, view_feat_bn  = self.header_view(view_features)
+        cls_score_view, view_feat_bn = self.header_view(view_features)
         if self.training:
             return [cls_score, cls_score_view], [global_features, view_features]
         elif test_score:
             return [cls_score, cls_score_view], torch.cat([global_features], dim=1)
         else:
             return torch.cat([global_features], dim=1)
-    
+
     def get_model_param_size(self):
         return sum(p.numel() for p in self.parameters()) / 1e6
 

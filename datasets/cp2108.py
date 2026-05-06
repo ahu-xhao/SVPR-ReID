@@ -6,7 +6,6 @@
 '''
 # here put the import lib
 
-import glob
 import os.path as osp
 
 from .bases import BaseImageDataset
@@ -17,25 +16,25 @@ from pathlib import Path
 import torch
 import copy
 
+# no need sota or heavy easy or ours heavy_hard
+sota_easy_ours_hard = {1536, 1538, 1541, 2054, 2055, 2057, 2058, 11, 1549, 1550, 13, 1552, 2062, 1551, 1555, 17, 2064, 1559, 24, 1561, 1563, 1564, 29, 1566, 1567, 31, 33, 1572, 1573, 2084, 1575, 1576, 2086, 1578, 39, 1577, 1580, 2094, 47, 1585, 49, 2045, 1588, 2101, 1589, 2103, 1591, 1593, 1592, 2107, 1612, 1614, 1619, 1622, 1625, 1631, 1633, 1637, 1641, 1149, 1156, 1162, 1163, 1164, 1682, 1702, 1197, 1198, 1709, 1201, 1714, 1203, 1206, 1211, 1724, 1730, 1732, 1226, 1229, 1232, 1748, 1246, 1247, 1250, 1764, 1253, 1766, 1768, 1257, 1261, 1262, 1774, 1269, 1781, 1271, 1270, 1273, 1274, 1276, 1279, 1281, 1287, 1800, 1289, 1291, 1295, 1298, 1299, 1300, 276, 1302, 1306, 282, 283, 1320,
+                       1323, 1326, 1327, 1841, 1341, 1348, 1860, 1865, 1356, 1357, 1360, 1362, 1369, 1372, 1374, 1376, 1378, 1379, 1380, 1389, 1390, 1906, 1395, 1396, 1909, 1913, 1914, 1401, 1404, 1402, 1411, 1415, 1416, 1417, 1418, 1420, 1422, 1423, 1424, 1425, 1935, 1428, 1430, 1432, 1433, 1945, 1434, 1438, 1439, 1444, 1957, 1958, 1449, 1450, 1961, 1452, 1453, 1454, 1455, 1451, 1969, 1457, 1458, 1968, 1971, 1974, 1972, 1464, 1463, 1979, 1981, 1470, 1471, 1472, 1985, 1986, 451, 1478, 1990, 1480, 1481, 1994, 1483, 1998, 2001, 2005, 1493, 1495, 1498, 1499, 2010, 2015, 1505, 2018, 1507, 2021, 998, 2023, 1510, 1514, 1515, 1518, 1519, 1520, 2031, 2034, 2035, 1521, 2037, 1525, 1528, 2041, 2042, 1533, 1535}
 
-final_div = {1536, 1538, 1541, 2054, 2055, 2057, 2058, 11, 1549, 1550, 13, 1552, 2062, 1551, 1555, 17, 2064, 1559, 24, 1561, 1563, 1564, 29, 1566, 1567, 31, 33, 1572, 1573, 2084, 1575, 1576, 2086, 1578, 39, 1577, 1580, 2094, 47, 1585, 49, 2045, 1588, 2101, 1589, 2103, 1591, 1593, 1592, 2107, 1612, 1614, 1619, 1622, 1625, 1631, 1633, 1637, 1641, 1149, 1156, 1162, 1163, 1164, 1682, 1702, 1197, 1198, 1709, 1201, 1714, 1203, 1206, 1211, 1724, 1730, 1732, 1226, 1229, 1232, 1748, 1246, 1247, 1250, 1764, 1253, 1766, 1768, 1257, 1261, 1262, 1774, 1269, 1781, 1271, 1270, 1273, 1274, 1276, 1279, 1281, 1287, 1800, 1289, 1291, 1295, 1298, 1299, 1300, 276, 1302, 1306, 282, 283, 1320,
-             1323, 1326, 1327, 1841, 1341, 1348, 1860, 1865, 1356, 1357, 1360, 1362, 1369, 1372, 1374, 1376, 1378, 1379, 1380, 1389, 1390, 1906, 1395, 1396, 1909, 1913, 1914, 1401, 1404, 1402, 1411, 1415, 1416, 1417, 1418, 1420, 1422, 1423, 1424, 1425, 1935, 1428, 1430, 1432, 1433, 1945, 1434, 1438, 1439, 1444, 1957, 1958, 1449, 1450, 1961, 1452, 1453, 1454, 1455, 1451, 1969, 1457, 1458, 1968, 1971, 1974, 1972, 1464, 1463, 1979, 1981, 1470, 1471, 1472, 1985, 1986, 451, 1478, 1990, 1480, 1481, 1994, 1483, 1998, 2001, 2005, 1493, 1495, 1498, 1499, 2010, 2015, 1505, 2018, 1507, 2021, 998, 2023, 1510, 1514, 1515, 1518, 1519, 1520, 2031, 2034, 2035, 1521, 2037, 1525, 1528, 2041, 2042, 1533, 1535}
+# sota_easy_ours_hard = {}
 
 
-class CP2000(BaseImageDataset):
+class CP2108(BaseImageDataset):
     """
-    CP2000
+    CP2108
     Reference:
     Zheng et al. Scalable Person Re-identification: A Benchmark. ICCV 2015.
     URL: http://www.liangzheng.org/Project/project_reid.html
 
     Dataset statistics:
-    # identities:   (+1 for background)
     # images:   (train) +   (query) +   (gallery)
-    # id structure:
     """
-    dataset_dir = 'CP2000'
-    dataset_name = 'CP2000'
+    dataset_dir = 'CP2108'
+    dataset_name = 'CP2108'
     logger = logging.getLogger("CLIP-ReID.dataset")
 
     def __init__(self, root=r'../datasets/', verbose=True, pid_begin=0, **kwargs):
@@ -47,7 +46,7 @@ class CP2000(BaseImageDataset):
             self.use_attr = False
             self.text_prompt = ""
             self.text_type = 'captions'
-            self.text_format = 'hybird'
+            self.text_format = 'depart'
             split_version = 100
         else:
             self.use_text = self.cfg.MODEL.USE_TEXT
@@ -102,7 +101,6 @@ class CP2000(BaseImageDataset):
                 attribute_num_classes = {k: len(v) for k, v in attribute_map.items() if k in self.use_attrs}
                 attribute_names = sorted(attribute_num_classes.keys())
                 self.texts = self.parse_texts_clean(attribute_anno, attribute_names)
-                # self.logger.info(colored(f"Attributes ({len(attribute_names)}): {attribute_names}", 'green'))
         else:
             self.texts = None
 
@@ -122,8 +120,6 @@ class CP2000(BaseImageDataset):
             self.gallery, print_cam=True)
 
     def parse_texts_clean(self, attribute_anno=None, attribute_names=None):
-
-        text_prefix = 'An image of a person with the following attributes: '
 
         pid_factory = {}
         for key, attrs in attribute_anno.items():
@@ -167,10 +163,7 @@ class CP2000(BaseImageDataset):
             for attr in self.attribute_names:
                 if attr in delete_keys:
                     continue
-
                 value = attrs.get(attr, 'unknown')
-                # if value =="Sweatshirts":
-                #     value = "jacket"
                 attr_label.append(self.attribute_map[attr][value])
             parts = key.split('_')
             pid = int(parts[0])
@@ -202,11 +195,6 @@ class CP2000(BaseImageDataset):
         return pid_factory
 
     def get_item_per_img(self, factory, pid, viewid, timeid):
-        # key = f"{pid}_{viewid}_{timeid}"
-        # text = texts.get(key, None)
-        # if text is not None:
-        #     key_brother = f"{pid}_{viewid}_{0 if timeid == 1 else 1}"
-        #     text = texts.get(key_brother, None)
         item = factory[pid][viewid][timeid]
         return item
 
@@ -259,8 +247,6 @@ class CP2000(BaseImageDataset):
             camid = int(parts[1])
             timeid = int(parts[2])
             sceneid = int(parts[3])
-            # if pid in final_div:
-            #     continue
             if camid < 23:
                 views['ground'] += 1
                 viewid = 0  # ground view
@@ -282,10 +268,6 @@ class CP2000(BaseImageDataset):
             if gallery_pids is not None and pid_idx not in gallery_pids:
                 continue
 
-            # if pid in v501_easy[:150]:
-            #     continue
-            # platform_name = {0: "UAV", 1: "CCTV"}[viewid]
-            # platform_name = "X"
             use_text = self.use_text
             if train:
                 text_anno = f"A photo of a {self.text_prompt} person with the following attributes: {self.get_item_per_img(self.texts, pid, 0, 1)}" if use_text else None
@@ -293,45 +275,28 @@ class CP2000(BaseImageDataset):
                 text_anno = f"A photo of a {self.text_prompt} person." if use_text else None
 
             use_attr = self.use_attr
-            # attr_anno = self.get_item_per_img(self.attributes, pid, 0, 1) if use_attr else None
-            attr_anno = None if use_attr else None
+            attr_anno = self.get_item_per_img(self.attributes, pid, 0, 1) if use_attr else None
 
-            # if self.use_text:
-            #     platform_name = {0: "UAV", 1: "CCTV"}[viewid]
-            #     if train:
-            #         text_anno = f"An image of a {self.text_prompt} in the {platform_name} platform, capturing natural colors and fine details: {self.get_item_per_img(self.texts, pid, 0, 1)}"
-            #         attr_anno = self.get_item_per_img(self.attributes, pid, viewid, 1) if self.use_attr else None
-            #     else:
-            #         text_anno = f"An image of a {self.text_prompt} in the {platform_name} platform. capturing natural colors and fine details are unkown."
-            #         attr_anno = None
-            # else:
-            #     text_anno = None
-            #     if train:
-            #         attr_anno = self.get_item_per_img(self.attributes, pid, 0, 1) if self.use_attr else None
-            #     else:
-            #         attr_anno = None
             dataset.append((img_path, self.pid_begin + pid_idx, camid, viewid, timeid, [text_anno, attr_anno]))
 
         self.logger.info(f'{dir_path}: {views}')
         return dataset
 
 
-class CP2000_ALL(CP2000):
-    dataset_name = 'CP2000_all'
+class CP2108_ALL(CP2108):
+    dataset_name = 'CP2108_all'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
         train = self._process_dir(train_dir, train=True, mode='mix')
         gallery = self._process_dir(gallery_dir, train=False, mode='mix')
         gallery_pids = {item[1] for item in gallery}
         query = self._process_dir(query_dir, train=False, mode='mix', gallery_pids=gallery_pids)
-        # query_new = [entry for entry in query]
-        # self.logger.info(f'query: {len(query)} -> {len(query_new)}')
-        query = [entry for entry in query if entry[1] not in final_div]
+        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
         return train, query, gallery
 
 
-class CP2000_GA(CP2000):
-    dataset_name = 'CP2000_ga'
+class CP2108_GA(CP2108):
+    dataset_name = 'CP2108_ga'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
         train = self._process_dir(train_dir, train=True, mode='mix')
@@ -339,30 +304,26 @@ class CP2000_GA(CP2000):
         gallery_pids = {item[1] for item in gallery}
 
         query = self._process_dir(query_dir, train=False, mode='ground', gallery_pids=gallery_pids)
-        query = [entry for entry in query if entry[1] not in final_div]
-        # self.logger.info(f'query: {len(query)} -> {len(query_new)}')
+        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
 
         return train, query, gallery
 
 
-class CP2000_AG(CP2000):
-    dataset_name = 'CP2000_ag'
+class CP2108_AG(CP2108):
+    dataset_name = 'CP2108_ag'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
-        # query_dir = osp.join(self.dataset_dir, 'query')
-        # gallery_dir = osp.join(self.dataset_dir, 'gallery')
         train = self._process_dir(train_dir, train=True, mode='mix')
         gallery = self._process_dir(gallery_dir, train=False, mode='ground')
         gallery_pids = {item[1] for item in gallery}
 
         query = self._process_dir(query_dir, train=False, mode='aerial', gallery_pids=gallery_pids)
-        query = [entry for entry in query if entry[1] not in final_div]
         return train, query, gallery
 
 
-class CP2000_AA(CP2000):
-    dataset_dir = 'CP2000'
-    dataset_name = 'CP2000_aa'
+class CP2108_AA(CP2108):
+    dataset_dir = 'CP2108'
+    dataset_name = 'CP2108_aa'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
         # query_dir = osp.join(self.dataset_dir, 'quer')
@@ -372,56 +333,46 @@ class CP2000_AA(CP2000):
         gallery_pids = {item[1] for item in gallery}
 
         query = self._process_dir(query_dir, train=False, mode='aerial', gallery_pids=gallery_pids)
-        # query_new = query
-        # self.logger.info(f'query: {len(query)} -> {len(query_new)}')
-        query = [entry for entry in query if entry[1] not in final_div]
+        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
         return train, query, gallery
 
 
-class CP2000_GG(CP2000):
-    dataset_dir = 'CP2000'
-    dataset_name = 'CP2000_gg'
+class CP2108_GG(CP2108):
+    dataset_dir = 'CP2108'
+    dataset_name = 'CP2108_gg'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
-        # query_dir = osp.join(self.dataset_dir, 'query')
-        # gallery_dir = osp.join(self.dataset_dir, 'gallery')
         train = self._process_dir(train_dir, train=True, mode='mix')
         gallery = self._process_dir(gallery_dir, train=False, mode='ground')
         gallery_pids = {item[1] for item in gallery}
 
         query = self._process_dir(query_dir, train=False, mode='ground', gallery_pids=gallery_pids)
-        # query_new = [entry for entry in query]
-        # self.logger.info(f'query: {len(query)} -> {len(query_new)}')
-        query = [entry for entry in query if entry[1] not in final_div]
+        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
         return train, query, gallery
 
 
-class CP2000_AGAG(CP2000):
-    dataset_dir = 'CP2000'
-    dataset_name = 'CP2000_agag'
+class CP2108_AGAG(CP2108):
+    dataset_dir = 'CP2108'
+    dataset_name = 'CP2108_agag'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
 
         train = self._process_dir(train_dir, train=True, mode='mix')
         query = self._process_dir(query_dir, train=False, mode='aerial-ground')
         gallery = self._process_dir(gallery_dir, train=False, mode='aerial-ground')
-
-        # query_new = [entry for entry in query if entry[1] not in cross_view_me_easy]
-        # query_new = query
-        # self.logger.info(f'query: {len(query)} -> {len(query_new)}')
-        query = [entry for entry in query if entry[1] not in final_div]
+        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
         return train, query, gallery
 
 
-class CP2000_AAGG(CP2000):
-    dataset_name = 'CP2000_aagg'
+class CP2108_AAGG(CP2108):
+    dataset_name = 'CP2108_aagg'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
         train = self._process_dir(train_dir, train=True, mode='mix')
         gallery = self._process_dir(gallery_dir, train=False, mode='mix')
         gallery_pids = {item[1] for item in gallery}
         query = self._process_dir(query_dir, train=False, mode='mix', gallery_pids=gallery_pids)
-        query = [entry for entry in query if entry[1] not in final_div]
+        query = [entry for entry in query if entry[1] not in sota_easy_ours_hard]
         return train, query, gallery
 
 
@@ -432,9 +383,9 @@ if __name__ == '__main__':
     print(f"{os.getcwd()}")
     from utils.logger import setup_logger
     logger = setup_logger("CLIP-ReID", save_dir=None, if_train=True)
-    dataset = CP2000_ALL()
-    dataset_ag = CP2000_AG()
-    dataset_ga = CP2000_GA()
-    dataset_aa = CP2000_AA()
-    dataset_gg = CP2000_GG()
-    dataset_agag = CP2000_AGAG()
+    dataset = CP2108_ALL()
+    dataset_ag = CP2108_AG()
+    dataset_ga = CP2108_GA()
+    dataset_aa = CP2108_AA()
+    dataset_gg = CP2108_GG()
+    dataset_agag = CP2108_AGAG()

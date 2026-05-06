@@ -15,7 +15,7 @@ import torch.distributed as dist
 from .occ_duke import OCC_DukeMTMCreID
 from .vehicleid import VehicleID
 from .veri import VeRi
-from .cp2000 import CP2000_ALL, CP2000_AA, CP2000_AG, CP2000_GA, CP2000_GG, CP2000_AGAG
+from .cp2108 import CP2108_ALL, CP2108_AA, CP2108_AG, CP2108_GA, CP2108_GG, CP2108_AGAG
 from .agreid import AGReID, AGReID_GA, AGReID_AG
 from .agreidv2 import AGReIDv2, AGReIDv2_CA, AGReIDv2_AC, AGReIDv2_AW, AGReIDv2_WA
 from .cargo import CARGO, CARGO_GA, CARGO_AG, CARGO_AA, CARGO_GG, CARGO_AGAG
@@ -28,12 +28,12 @@ __factory = {
     'veri': VeRi,
     'VehicleID': VehicleID,
 
-    'CP2000_ALL': CP2000_ALL,
-    'CP2000_GA': CP2000_GA,
-    'CP2000_AG': CP2000_AG,
-    'CP2000_AA': CP2000_AA,
-    'CP2000_GG': CP2000_GG,
-    'CP2000_AGAG': CP2000_AGAG,
+    'CP2108_ALL': CP2108_ALL,
+    'CP2108_GA': CP2108_GA,
+    'CP2108_AG': CP2108_AG,
+    'CP2108_AA': CP2108_AA,
+    'CP2108_GG': CP2108_GG,
+    'CP2108_AGAG': CP2108_AGAG,
 
     'AGReID': AGReID,
     'AGReID_GA': AGReID_GA,

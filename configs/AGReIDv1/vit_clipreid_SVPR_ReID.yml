@@ -2,20 +2,20 @@ MODEL:
   DEVICE_ID: ('1')
   PRETRAIN_PATH: '../pretrain_model/CLIP-ViT-B-16.pt'
   NAME: 'ViT-B-16'
-  # ARCH_NAME: 'CLIP_SVPR_ReID'
-  ARCH_NAME: 'CLIP_baseline'
+  ARCH_NAME: 'CLIP_SVPR_ReID'
   STRIDE_SIZE: [16, 16]
-  ID_LOSS_WEIGHT: 0.25
+  ID_LOSS_WEIGHT : 0.25
   # xhao
-  USE_TEXT: False
+  USE_TEXT: True
   TEXT_TYPE: 'attribute'                       # Type of text input (options: 'captions', 'attribute')
+  TEXT_FORMAT: 'depart'                        # Format of text input (options: 'hybird', 'depart')
   FREEZE_TEXT: True
   TEXT_PROMPT: 4                               # Num of text prompt ("X ")
   TEXT_LEN: 100                                # context length of text for clip tokenlizer
   HEAD_UNIFORM: False                           # Whether to use a uniform contact features loss supervision
-  USE_ATTR: False
-  VIEW_PROMPT: 0
-  
+  USE_ATTR: True
+  VIEW_PROMPT: 4
+
 INPUT:
   SIZE_TRAIN: [256, 128]
   SIZE_TEST: [256, 128]
@@ -35,9 +35,10 @@ DATALOADER:
 SOLVER:
   STAGE1:
     TRAIN: False
-    PRETRAIN_PATH: ''
+    # PRETRAIN_PATH: 'outputs/agreidv1_CLIPReID_2stage/ViT-B-16_stage1_120.pth'
   
   IMS_PER_BATCH: 128
+  MARGIN: 0.2
   OPTIMIZER_NAME: "Adam"
   BASE_LR: 0.000005
   WARMUP_METHOD: 'linear'
@@ -48,23 +49,22 @@ SOLVER:
   LOG_PERIOD: 5
   EVAL_PERIOD: 2
   
-  STEPS: [30, 50]
+  STEPS: [30, 50, 80]
 
 DATASETS:
   ROOT_DIR: ('../datasets/')
-  NAMES: ("CP2108_ALL")
-  TESTS: ("CP2108_ALL", "CP2108_AG", "CP2108_GA", "CP2108_AGAG")
-  VERSION: 100
+  NAMES: ("AGReID")
+  TESTS: ("AGReID", "AGReID_AG","AGReID_GA")
 
 TEST:
   IMS_PER_BATCH: 256
   RE_RANKING: False
-  WEIGHT: 'outputs/cp2108_baseline/transformer_best.pth'
+  WEIGHT: 'outputs/agreidv1_svpr_reid/transformer_best.pth'
   NECK_FEAT: 'before'
   FEAT_NORM: 'yes'
   TIME_MODE: 'mix'
 
-OUTPUT_DIR: 'outputs/cp2108_baseline'
+OUTPUT_DIR: 'outputs/agreidv1_svpr_reid'
 
-# CUDA_VISIBLE_DEVICES=1 python train_clipreid_xhao.py --config_file configs/CP2108/vit_clipreid_baseline.yml
-# CUDA_VISIBLE_DEVICES=4 python test_clipreid_xhao.py --config_file configs/CP2108/vit_clipreid_baseline.yml
+# nohup CUDA_VISIBLE_DEVICES=0 python train_clipreid_xhao.py --config_file configs/AGReIDv1/vit_clipreid_SVPR_ReID.yml > /dev/null 2>&1 &
+# CUDA_VISIBLE_DEVICES=0 python test_clipreid_xhao.py --config_file configs/AGReIDv1/vit_clipreid_SVPR_ReID.yml

@@ -2,20 +2,21 @@ MODEL:
   DEVICE_ID: ('1')
   PRETRAIN_PATH: '../pretrain_model/CLIP-ViT-B-16.pt'
   NAME: 'ViT-B-16'
-  # ARCH_NAME: 'CLIP_SVPR_ReID'
   ARCH_NAME: 'CLIP_baseline'
+  # ARCH_NAME: 'CLIP_CVPR'
   STRIDE_SIZE: [16, 16]
-  ID_LOSS_WEIGHT: 0.25
+  ID_LOSS_WEIGHT : 0.25
   # xhao
-  USE_TEXT: False
-  TEXT_TYPE: 'attribute'                       # Type of text input (options: 'captions', 'attribute')
+  TEXT_TYPE: 'captions'                       # Type of text input (options: 'captions', 'attribute')
+  TEXT_FORMAT: 'hybird'
   FREEZE_TEXT: True
-  TEXT_PROMPT: 4                               # Num of text prompt ("X ")
-  TEXT_LEN: 100                                # context length of text for clip tokenlizer
+  USE_TEXT: False
+  FREEZE_TEXT: False
+  USE_TEXT: False
+  TEXT_PROMPT: 2                               # Num of text prompt ("X ")
+  TEXT_LEN: 120                                # context length of text for clip tokenlizer
   HEAD_UNIFORM: False                           # Whether to use a uniform contact features loss supervision
-  USE_ATTR: False
-  VIEW_PROMPT: 0
-  
+
 INPUT:
   SIZE_TRAIN: [256, 128]
   SIZE_TEST: [256, 128]
@@ -29,7 +30,7 @@ DATALOADER:
   SAMPLER: 'softmax_triplet'
   SAMPLER_NAME: 'RandomIdentitySampler'
   AUG: False
-  NUM_INSTANCE: 4
+  NUM_INSTANCE: 8
   NUM_WORKERS: 8
 
 SOLVER:
@@ -52,19 +53,18 @@ SOLVER:
 
 DATASETS:
   ROOT_DIR: ('../datasets/')
-  NAMES: ("CP2108_ALL")
-  TESTS: ("CP2108_ALL", "CP2108_AG", "CP2108_GA", "CP2108_AGAG")
-  VERSION: 100
+  NAMES: ("CARGO")
+  TESTS: ("CARGO", "CARGO_AG","CARGO_GA","CARGO_AA", "CARGO_GG", "CARGO_AGAG")
 
 TEST:
   IMS_PER_BATCH: 256
   RE_RANKING: False
-  WEIGHT: 'outputs/cp2108_baseline/transformer_best.pth'
+  WEIGHT: 'outputs/cargo_baseline/transformer_best.pth'
   NECK_FEAT: 'before'
   FEAT_NORM: 'yes'
   TIME_MODE: 'mix'
 
-OUTPUT_DIR: 'outputs/cp2108_baseline'
+OUTPUT_DIR: 'outputs/cargo_baseline'
 
-# CUDA_VISIBLE_DEVICES=1 python train_clipreid_xhao.py --config_file configs/CP2108/vit_clipreid_baseline.yml
-# CUDA_VISIBLE_DEVICES=4 python test_clipreid_xhao.py --config_file configs/CP2108/vit_clipreid_baseline.yml
+# CUDA_VISIBLE_DEVICES=4 python train_clipreid_xhao.py --config_file configs/CARGO/vit_clipreid_baseline.yml
+# CUDA_VISIBLE_DEVICES=4 python test_clipreid_xhao.py --config_file configs/CARGO/vit_clipreid_baseline.yml
