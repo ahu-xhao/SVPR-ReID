@@ -4,11 +4,15 @@
 @contact:  xhao2510@foxmail.com
 """
 
+import logging
+
 import torch
 import torch.nn.functional as F
 from .softmax_loss import CrossEntropyLabelSmooth, LabelSmoothingCrossEntropy
 from .triplet_loss import TripletLoss
 from .center_loss import CenterLoss
+
+logger = logging.getLogger(__name__)
 
 
 def make_loss(cfg, num_classes):    # modified by gu
@@ -98,13 +102,12 @@ class ReIDLoss:
         if 'triplet' in cfg.MODEL.METRIC_LOSS_TYPE:
             if cfg.MODEL.NO_MARGIN:
                 self.triplet = TripletLoss()
-                print("using soft triplet loss for training")
+                logger.info("using soft triplet loss for training")
             else:
                 self.triplet = TripletLoss(cfg.SOLVER.MARGIN)  # triplet loss
-                print("using triplet loss with margin:{}".format(cfg.SOLVER.MARGIN))
+                logger.info("using triplet loss with margin:{}".format(cfg.SOLVER.MARGIN))
         else:
-            print('expected METRIC_LOSS_TYPE should be triplet'
-                  'but got {}'.format(cfg.MODEL.METRIC_LOSS_TYPE))
+            logger.info('expected METRIC_LOSS_TYPE should be triplet, but got {}'.format(cfg.MODEL.METRIC_LOSS_TYPE))
 
     def __call__(self, score, feat, target, target_cam=None, i2tscore=None, add_type='sum'):
         loss_id = self.get_id_loss(score, feat, target, add_type=add_type)

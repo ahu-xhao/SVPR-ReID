@@ -47,7 +47,7 @@ class AGReIDv2(BaseImageDataset):
     # images:   (train) +   (query) +   (gallery)
     # id structure:
     """
-    dataset_dir = "AGReIDv2"
+    dataset_dir = "AGReID.v2"
     dataset_name = 'AGReIDv2'
     logger = logging.getLogger("CLIP-ReID.dataset")
 
@@ -264,7 +264,6 @@ class AGReIDv2(BaseImageDataset):
 
 
 class AGReIDv2_AC(AGReIDv2):
-    dataset_dir = "AGReIDv2"
     dataset_name = 'AGReIDv2_ac'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
@@ -279,7 +278,6 @@ class AGReIDv2_AC(AGReIDv2):
 
 
 class AGReIDv2_CA(AGReIDv2):
-    dataset_dir = "AGReIDv2"
     dataset_name = 'AGReIDv2_ca'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
@@ -294,7 +292,6 @@ class AGReIDv2_CA(AGReIDv2):
 
 
 class AGReIDv2_AW(AGReIDv2):
-    dataset_dir = "AGReIDv2"
     dataset_name = 'AGReIDv2_aw'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
