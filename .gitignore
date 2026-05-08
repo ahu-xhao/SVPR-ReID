@@ -8,3 +8,4 @@
 /model/backbones/__pycache__
 /model/clip/__pycache__
 /test*/*
+/output*/*
