@@ -528,7 +528,7 @@ class CLIP_SVPR_ReID(nn.Module):
         # view decouple
         img_cls_inv, view_prompt = self.VBD(img_cls, view_prompt)  # [B, C], [B, C]
 
-        if self.use_attr and attr_labels is not None:
+        if self.use_attr:
             attr_feat_img, loss_attr = self.ASMOE(text_prompt, img_cls_inv, img_patchs, attr_labels)  # [B,C]
         else:
             attr_feat_img, loss_attr = None, torch.tensor(0.0, device=x.device)
@@ -578,10 +578,6 @@ class CLIP_SVPR_ReID(nn.Module):
             else:
                 # return torch.cat([*return_feats[:-3], return_feats[-2]], dim=1)
                 return torch.cat([img_cls_inv, CVPR_query, img_patch, attr_feat_img], dim=1)
-
-    def get_model_param_size(self):
-        total_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
-        return total_params / 1e6  # in millions (M)
 
     def load_param_text(self, trained_path):
         loaded_keys = []
