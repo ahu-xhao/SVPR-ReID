@@ -9,3 +9,4 @@
 /model/clip/__pycache__
 /test*/*
 /output*/*
+.vscode/*
