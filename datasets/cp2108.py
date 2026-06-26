@@ -204,10 +204,9 @@ class CP2108(BaseImageDataset):
                 "'{}' is not available".format(self.gallery_dir))
 
     def _process_dir(self, dir_path, train=False, mode='mix', gallery_pids=None):
-        # img_paths = glob.glob(osp.join(dir_path, '**', '*.jpg'), recursive=True)
         root = Path(dir_path)
-        image_dir = f"images_v{self.split_version}"
-        data_dir = root.parent.parent / image_dir
+        # image_dir = f"images_v{self.split_version}"
+        data_dir = root.parent.parent / "images"
         with open(root, 'r') as f:
             data = f.read().strip().split('\n')
         img_paths = [str(data_dir / line) for line in data]
