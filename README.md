@@ -10,7 +10,7 @@ We will update more detailed result (including dataset, training, verification) 
 
 * [X] 2025.7.23: Build project page.
 * [X] 2025.8.5: Add base code.
-* [X] 2025.11.8: Add the CP2108 and the usage license (CP2108 is undergoing systematic collation and revision) .
+* [X] 2025.11.8: Add the CP2108 and the usage license (CP2108 is available for public study).
 
 ### News🔉
 
@@ -19,8 +19,6 @@ We will update more detailed result (including dataset, training, verification) 
 20251108 - Our paper has been accepted by AAAI'26 !
 
 20260314 - Our paper has been officially published in the AAAI'26 Proceedings !
-
-
 
 ---
 
@@ -60,7 +58,7 @@ sh setup.sh
 
 #### step2 Datasets:
 
-- **CP2108:**[Google Drive](https://drive.google.com/drive/folders/1q3XYrJfW-QeFRe_FAYFsewdT4K4QFEXd?usp=sharing)
+- **CP2108:** [Google Drive](https://drive.google.com/drive/folders/1q3XYrJfW-QeFRe_FAYFsewdT4K4QFEXd?usp=sharing)
 - **CARGO:**   [Google Drive](https://drive.google.com/file/d/1yDjyH0VtW7efxP3vgQjIqTx2oafCB67t/view?usp=drive_link)
 - **AGReID.v2:**[Google Drive](https://drive.google.com/drive/folders/16r7G_CuUqfWG6_UCT7goIGRMqJird6vK?usp=share_link)
 - **AGReID:** [Google Drive](https://drive.google.com/file/d/1hzieEPlXfjkN3V3XWqI5rAwpF_sCF1K9/view?usp=sharing)
