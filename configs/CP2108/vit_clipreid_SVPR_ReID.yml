@@ -8,7 +8,7 @@ MODEL:
   ID_LOSS_WEIGHT : 0.25
   # xhao
   USE_TEXT: True
-  TEXT_TYPE: 'attribute'                       # Type of text input (options: 'captions', 'attribute')
+  TEXT_TYPE: 'words'                       # Type of text input (options: 'captions', 'words')
   TEXT_FORMAT: 'depart'                        # Format of text input (options: 'hybird', 'depart')
   FREEZE_TEXT: True
   TEXT_PROMPT: 4                               # Num of text prompt ("X ")
