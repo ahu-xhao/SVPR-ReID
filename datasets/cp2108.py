@@ -40,33 +40,40 @@ class CP2108(BaseImageDataset):
             self.use_attr = False
             self.text_prompt = ""
             self.text_type = 'captions'
-            self.text_format = 'depart'
             split_version = 100
         else:
             self.use_text = self.cfg.MODEL.USE_TEXT
             self.text_prompt = 'X ' * self.cfg.MODEL.TEXT_PROMPT if self.cfg.MODEL.TEXT_PROMPT > 0 else ""
             self.use_attr = self.cfg.MODEL.USE_ATTR
             self.text_type = self.cfg.MODEL.TEXT_TYPE
-            self.text_format = self.cfg.MODEL.TEXT_FORMAT
             split_version = self.cfg.DATASETS.VERSION
 
         self.split_version = split_version
         self.dataset_dir = osp.join(root, self.dataset_dir)
-        self.train_dir = osp.join(self.dataset_dir, f'split_v{split_version}', f'train_v{split_version}.txt')
-        self.query_dir = osp.join(self.dataset_dir, f'split_v{split_version}', f'query_v{split_version}.txt')
-        self.gallery_dir = osp.join(self.dataset_dir, f'split_v{split_version}', f'gallery_v{split_version}.txt')
+        # self.train_dir = osp.join(self.dataset_dir, f'split_v{split_version}', f'train_v{split_version}.txt')
+        # self.query_dir = osp.join(self.dataset_dir, f'split_v{split_version}', f'query_v{split_version}.txt')
+        # self.gallery_dir = osp.join(self.dataset_dir, f'split_v{split_version}', f'gallery_v{split_version}.txt')
+        self.train_dir = osp.join(self.dataset_dir, 'train.txt')
+        self.query_dir = osp.join(self.dataset_dir, 'query.txt')
+        self.gallery_dir = osp.join(self.dataset_dir, 'gallery.txt')
         self.logger.info(colored(f"Dataset split version: {split_version}", 'green'))
 
         self.use_attrs = ['Glasses', 'Holding Phone', 'Head Accessories', 'Accessories', 'Pose', 'Upper Clothing',
                           'Upper Color', 'Upper Style', 'Lower Clothing', 'Lower Color', 'Lower Style', 'Feet']
+
+        self.attribute_anno = {}
+        self.attribute_map = {}
+        self.attribute_names = []
+        self.attribute_num_classes = {}
+        self.attributes = {}
 
         self._check_before_run()
         self.pid_begin = pid_begin
 
         # attribute setting loading
         if self.use_attr:
-            attribute_path = osp.join(self.dataset_dir, 'attributes_labeled_qwen.json')
-            attribute_template_path = osp.join(self.dataset_dir, 'attr_translation_idx.json')
+            attribute_path = osp.join(self.dataset_dir, 'attributes_labeled.json')
+            attribute_template_path = osp.join(self.dataset_dir, 'attributes_translation_idx.json')
             # self.delete_attr = ['View','Illumination']
             self.attribute_anno = json.load(open(attribute_path, 'r'))
             self.attribute_map = json.load(open(attribute_template_path, 'r'))
@@ -74,29 +81,24 @@ class CP2108(BaseImageDataset):
             self.attribute_names = sorted(self.attribute_num_classes.keys())
             self.attributes = self.parse_attributes(self.attribute_anno)
 
-        else:
-            # self.delete_attr = {}
-            self.attribute_anno = {}
-            self.attribute_map = {}
-            self.attribute_names = []
-            self.attribute_num_classes = {}
-            self.attributes = {}
         # text setting loading
+        self.texts = None
         if self.use_text:
             if self.text_type == 'captions':
-                text_path = osp.join(self.dataset_dir, 'attribute_captions_doubao.json')
+                text_path = osp.join(self.dataset_dir, 'attributes_captions.json')
                 texts = json.load(open(text_path, 'r'))
                 self.texts = self.parse_texts(texts)
-            else:
-                attribute_path = osp.join(self.dataset_dir, 'attributes_labeled_qwen.json')
-                attribute_template_path = osp.join(self.dataset_dir, 'attr_translation_idx.json')
+
+            elif self.text_type == 'words':
+                attribute_path = osp.join(self.dataset_dir, 'attributes_labeled.json')
+                attribute_template_path = osp.join(self.dataset_dir, 'attributes_translation_idx.json')
                 attribute_anno = json.load(open(attribute_path, 'r'))
                 attribute_map = json.load(open(attribute_template_path, 'r'))
                 attribute_num_classes = {k: len(v) for k, v in attribute_map.items() if k in self.use_attrs}
                 attribute_names = sorted(attribute_num_classes.keys())
-                self.texts = self.parse_texts_clean(attribute_anno, attribute_names)
-        else:
-            self.texts = None
+                self.texts = self.parse_texts(attribute_anno, attribute_names)
+            else:
+                raise ValueError(f"Unsupported text type: {self.text_type}, please choose from 'captions' or 'words'.")
 
         self.train, self.query, self.gallery = self.make_dataset(train_dir=self.train_dir,
                                                                  query_dir=self.query_dir,
@@ -113,10 +115,9 @@ class CP2108(BaseImageDataset):
         self.num_gallery_pids, self.num_gallery_imgs, self.num_gallery_cams, self.num_gallery_vids = self.get_imagedata_info(
             self.gallery, print_cam=True)
 
-    def parse_texts_clean(self, attribute_anno=None, attribute_names=None):
-
+    def parse_texts(self, texts_dict, attribute_names=None):
         pid_factory = {}
-        for key, attrs in attribute_anno.items():
+        for key, text_item in texts_dict.items():
             parts = key.split('_')
             pid = int(parts[0])
             viewid = int(parts[1])
@@ -125,26 +126,15 @@ class CP2108(BaseImageDataset):
                 pid_factory[pid] = {}
             if viewid not in pid_factory[pid]:
                 pid_factory[pid][viewid] = {}
-            attr_for_test = ''
-            for attr in attribute_names:
-                attr_for_test += f"{attr.replace(' ', '_')} is {attrs[attr]}, "
-            pid_factory[pid][viewid][timeid] = f'{attr_for_test.strip()[:-1]}.'
-            # pid_factory[pid][viewid][timeid] = f'{text_prefix} {attr_for_test.strip()[:-1]}.'
 
-        pid_factory = self.repair_factory(pid_factory)
-        return pid_factory
+            if self.text_type == 'words':
+                text_temp = ''
+                for attr in attribute_names:
+                    text_temp += f"{attr.replace(' ', '_')} is {text_item[attr]}, "
+                text = text_temp.strip(', ') + '.'
+            else:
+                text = text_item
 
-    def parse_texts(self, texts):
-        pid_factory = {}
-        for key, text in texts.items():
-            parts = key.split('_')
-            pid = int(parts[0])
-            viewid = int(parts[1])
-            timeid = int(parts[2])
-            if pid not in pid_factory:
-                pid_factory[pid] = {}
-            if viewid not in pid_factory[pid]:
-                pid_factory[pid][viewid] = {}
             pid_factory[pid][viewid][timeid] = text
 
         pid_factory = self.repair_factory(pid_factory)
@@ -183,9 +173,11 @@ class CP2108(BaseImageDataset):
 
             for viewid in range(2):
                 if 0 not in pid_factory[pid][viewid]:
-                    pid_factory[pid][viewid][0] = copy.deepcopy(pid_factory[pid][viewid][1])
+                    pid_factory[pid][viewid][0] = copy.deepcopy(
+                        pid_factory[pid][viewid][1])
                 elif 1 not in pid_factory[pid][viewid]:
-                    pid_factory[pid][viewid][1] = copy.deepcopy(pid_factory[pid][viewid][0])
+                    pid_factory[pid][viewid][1] = copy.deepcopy(
+                        pid_factory[pid][viewid][0])
         return pid_factory
 
     def get_item_per_img(self, factory, pid, viewid, timeid):
@@ -214,8 +206,8 @@ class CP2108(BaseImageDataset):
     def _process_dir(self, dir_path, train=False, mode='mix', gallery_pids=None):
         # img_paths = glob.glob(osp.join(dir_path, '**', '*.jpg'), recursive=True)
         root = Path(dir_path)
-        split_version = f"images_v{self.split_version}" if self.split_version >= 100 else 'images'
-        data_dir = root.parent.parent / split_version
+        image_dir = f"images_v{self.split_version}"
+        data_dir = root.parent.parent / image_dir
         with open(root, 'r') as f:
             data = f.read().strip().split('\n')
         img_paths = [str(data_dir / line) for line in data]
@@ -226,7 +218,8 @@ class CP2108(BaseImageDataset):
             try:
                 pid = int(img_name.split('_')[0])
             except Exception as e:
-                self.logger.error(f"Error parsing PID from image name '{img_name}': {e}")
+                self.logger.error(
+                    f"Error parsing PID from image name '{img_name}': {e}")
                 raise
             if pid == -1:
                 continue  # junk images are just ignored
@@ -269,9 +262,11 @@ class CP2108(BaseImageDataset):
                 text_anno = f"A photo of a {self.text_prompt} person." if use_text else None
 
             use_attr = self.use_attr
-            attr_anno = self.get_item_per_img(self.attributes, pid, 0, 1) if use_attr else None
+            attr_anno = self.get_item_per_img(
+                self.attributes, pid, 0, 1) if use_attr else None
 
-            dataset.append((img_path, self.pid_begin + pid_idx, camid, viewid, timeid, [text_anno, attr_anno]))
+            dataset.append((img_path, self.pid_begin + pid_idx,
+                           camid, viewid, timeid, [text_anno, attr_anno]))
 
         self.logger.info(f'{dir_path}: {views}')
         return dataset
@@ -296,7 +291,6 @@ class CP2108_GA(CP2108):
         train = self._process_dir(train_dir, train=True, mode='mix')
         gallery = self._process_dir(gallery_dir, train=False, mode='aerial')
         gallery_pids = {item[1] for item in gallery}
-
         query = self._process_dir(query_dir, train=False, mode='ground', gallery_pids=gallery_pids)
 
         return train, query, gallery
@@ -309,8 +303,8 @@ class CP2108_AG(CP2108):
         train = self._process_dir(train_dir, train=True, mode='mix')
         gallery = self._process_dir(gallery_dir, train=False, mode='ground')
         gallery_pids = {item[1] for item in gallery}
-
         query = self._process_dir(query_dir, train=False, mode='aerial', gallery_pids=gallery_pids)
+
         return train, query, gallery
 
 
@@ -319,12 +313,9 @@ class CP2108_AA(CP2108):
     dataset_name = 'CP2108_aa'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
-        # query_dir = osp.join(self.dataset_dir, 'quer')
-        # gallery_dir = osp.join(self.dataset_dir, 'gallery')
         train = self._process_dir(train_dir, train=True, mode='mix')
         gallery = self._process_dir(gallery_dir, train=False, mode='aerial')
         gallery_pids = {item[1] for item in gallery}
-
         query = self._process_dir(query_dir, train=False, mode='aerial', gallery_pids=gallery_pids)
 
         return train, query, gallery
@@ -338,7 +329,6 @@ class CP2108_GG(CP2108):
         train = self._process_dir(train_dir, train=True, mode='mix')
         gallery = self._process_dir(gallery_dir, train=False, mode='ground')
         gallery_pids = {item[1] for item in gallery}
-
         query = self._process_dir(query_dir, train=False, mode='ground', gallery_pids=gallery_pids)
 
         return train, query, gallery
@@ -349,10 +339,10 @@ class CP2108_AGAG(CP2108):
     dataset_name = 'CP2108_agag'
 
     def make_dataset(self, train_dir, query_dir, gallery_dir):
-
         train = self._process_dir(train_dir, train=True, mode='mix')
-        query = self._process_dir(query_dir, train=False, mode='aerial-ground')
         gallery = self._process_dir(gallery_dir, train=False, mode='aerial-ground')
+        gallery_pids = {item[1] for item in gallery}
+        query = self._process_dir(query_dir, train=False, mode='aerial-ground', gallery_pids=gallery_pids)
 
         return train, query, gallery
 

@@ -80,15 +80,6 @@ class BaseImageDataset(BaseDataset):
         self.logger.info("  gallery  | {:5d} | {:8d} | {:9d}".format(num_gallery_pids, num_gallery_imgs, num_gallery_cams))
         self.logger.info("  ----------------------------------------")
 
-        # print("Dataset statistics:")
-        # print("  ----------------------------------------")
-        # print("  subset   | # ids | # images | # cameras")
-        # print("  ----------------------------------------")
-        # print("  train    | {:5d} | {:8d} | {:9d}".format(num_train_pids, num_train_imgs, num_train_cams))
-        # print("  query    | {:5d} | {:8d} | {:9d}".format(num_query_pids, num_query_imgs, num_query_cams))
-        # print("  gallery  | {:5d} | {:8d} | {:9d}".format(num_gallery_pids, num_gallery_imgs, num_gallery_cams))
-        # print("  ----------------------------------------")
-
 
 class ImageDataset(Dataset):
     def __init__(self, dataset, transform=None, text_length: int = 77, truncate: bool = True):
