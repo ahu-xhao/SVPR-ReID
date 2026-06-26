@@ -60,7 +60,7 @@ sh setup.sh
 
 #### step2 Datasets:
 
-- **CP2108:** Google Drive（preparing for publication， sooooon！！！）
+- **CP2108:**[Google Drive](https://drive.google.com/drive/folders/1q3XYrJfW-QeFRe_FAYFsewdT4K4QFEXd?usp=sharing)
 - **CARGO:**   [Google Drive](https://drive.google.com/file/d/1yDjyH0VtW7efxP3vgQjIqTx2oafCB67t/view?usp=drive_link)
 - **AGReID.v2:**[Google Drive](https://drive.google.com/drive/folders/16r7G_CuUqfWG6_UCT7goIGRMqJird6vK?usp=share_link)
 - **AGReID:** [Google Drive](https://drive.google.com/file/d/1hzieEPlXfjkN3V3XWqI5rAwpF_sCF1K9/view?usp=sharing)
